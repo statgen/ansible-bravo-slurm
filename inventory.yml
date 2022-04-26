@@ -1,0 +1,9 @@
+---
+login:
+  hosts:
+    bravo-slurm-login:
+      tags:
+        project: bravo
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+

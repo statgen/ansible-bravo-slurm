@@ -1,0 +1,321 @@
+---
+- hosts: login
+  become: yes
+  tasks:
+    - name: Update yum cache
+      ansible.builtin.yum:
+        update_cache: yes
+
+    - name: Install dependencies for pipeline tooling
+      ansible.builtin.yum:
+        pkg:
+          - jq
+          - java-11-openjdk-headless
+          - gcc
+          - git
+          - cmake
+          - zlib-devel
+          - epel-release
+          - bzip2-devel
+          - xz-devel
+          - perl-core
+          - perl-CPAN
+          - perl-App-cpanminus
+          - openssl
+          - miniz
+        state: present
+        update_cache: no
+
+- hosts: login
+  become: yes
+  vars:
+    nf_install_dir: "/apps/nextflow"
+    nf_version: "21.10.6"
+  tasks:
+    - name: Create nextflow install dir
+      ansible.builtin.file:
+        path: "{{nf_install_dir}}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Download nextflow
+      ansible.builtin.uri:
+        url: "{{ nf_releases }}/v{{ nf_version }}/nextflow"
+        dest: "{{ nf_install_dir }}/nextflow"
+        creates: "{{ nf_install_dir }}/nextflow"
+      vars:
+        nf_releases: https://github.com/nextflow-io/nextflow/releases/download
+
+    - name: Mark Nextflow as executable
+      ansible.builtin.file:
+        dest: "{{ nf_install_dir }}/nextflow"
+        mode: a+x
+        owner: root
+
+- hosts: login
+  become: yes
+  vars:
+    libstatgen_dir: "/apps/libStatGen"
+    bamutil_dir: "/apps/bamUtil"
+    loftee_dir: "/apps/loftee"
+  tasks:
+    - name: Clone lib StatGen dependency 
+      ansible.builtin.git:
+        depth: 1
+        dest: "{{libstatgen_dir}}"
+        repo: "https://github.com/statgen/libStatGen.git"
+
+    - name: Build lib StatGen dependency 
+      community.general.make:
+        chdir: "{{libstatgen_dir}}"
+
+    - name: Clone StatGen bamUtil 
+      ansible.builtin.git:
+        depth: 1
+        dest: "{{bamutil_dir}}"
+        repo: "https://github.com/statgen/bamUtil.git"
+
+    - name: Build StatGen bamUtil 
+      community.general.make:
+        chdir: "{{bamutil_dir}}"
+
+    - name: Clone Loftee plugin for GRCh38
+      ansible.builtin.git:
+        depth: 1
+        dest: "{{loftee_dir}}"
+        repo: "https://github.com/konradjk/loftee.git"
+        single_branch: yes
+        version: grch38
+
+- hosts: login
+  become: yes
+  vars:
+    htslib_dir: "/apps/htslib"
+    htslib_ver: "1.15.1"
+  tags:
+    - htslib
+  tasks:
+    - name: Create htslib dir
+      ansible.builtin.file:
+        path: "{{htslib_dir}}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Download htslib
+      ansible.builtin.unarchive:
+        remote_src: yes
+        src: "https://github.com/samtools/htslib/releases/download/{{htslib_ver}}/htslib-{{htslib_ver}}.tar.bz2"
+        dest: "{{htslib_dir}}"
+        creates: "{{htslib_dir}}/htslib-{{htslib_ver}}"
+
+    - name: Configure htslib
+      ansible.builtin.command:
+        chdir: "{{htslib_dir}}/htslib-{{htslib_ver}}"
+        argv:
+          - "./configure"
+          - "--enable-libcurl"
+
+    - name: Build htslib
+      community.general.make:
+        chdir: "{{htslib_dir}}/htslib-{{htslib_ver}}"
+
+    - name: Install htslib
+      community.general.make:
+        chdir: "{{htslib_dir}}/htslib-{{htslib_ver}}"
+        target: install
+
+    - name: Duplicate tabix so VEP INSTALL can find it.
+      ansible.builtin.file:
+        src: "/usr/local/bin/tabix"
+        path: "/usr/bin/tabix"
+        state: link 
+        mode: 0755
+
+- hosts: login
+  become: yes
+  vars:
+    vep_dir: "/apps/ensemble_vep"
+    vep_cache_dir: "/apps/vep_cache"
+  tags:
+    - vep
+  tasks:
+    - name: Duplicate bgzip so VEP INSTALL can find it.
+      ansible.builtin.file:
+        src: "/usr/local/bin/bgzip"
+        path: "/usr/bin/bgzip"
+        state: link 
+        mode: 0755
+
+    - name: VEP dependency. Update Module build version
+      community.general.cpanm:
+        pkg: "Module::Build" 
+        mode: new
+        version: "0.42"
+
+    - name: VEP dependencies. Bio Root
+      community.general.cpanm:
+        pkg: "Bio::Root::Version" 
+
+    - name: VEP dependencies. Try Tiny
+      community.general.cpanm:
+        pkg: "Try::Tiny" 
+
+    - name: Clone VEP
+      ansible.builtin.git:
+        repo: "https://github.com/Ensembl/ensembl-vep.git"
+        depth: 1
+        dest: "{{vep_dir}}"
+
+    - name: Install VEP
+      ansible.builtin.command:
+        chdir: "{{vep_dir}}"
+        cmd: "perl INSTALL.pl --CACHEDIR {{vep_cache_dir}} --PLUGINS all --AUTO ap -q"
+
+    - name: Create VEP cache dir
+      ansible.builtin.file:
+        path: "{{vep_cache_dir}}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Install VEP cache
+      ansible.builtin.unarchive:
+        remote_src: yes
+        src: "http://ftp.ensembl.org/pub/release-106/variation/vep/homo_sapiens_vep_106_GRCh38.tar.gz"
+        dest: "{{vep_cache_dir}}"
+        creates: "{{vep_cache_dir}}/homo_sapiens/106_GRCh38"
+
+- hosts: login
+  become: yes
+  vars:
+    refs_dir: "/apps/reference"
+  tags:
+    - refs
+  tasks:
+    - name: Create references dir
+      ansible.builtin.file:
+        path: "{{refs_dir}}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Copy homosapiens fasta
+      ansible.builtin.get_url:
+        url: ftp://anonymous@share.sph.umich.edu/bravo/hs38DH.fa 
+        dest: "{{refs_dir}}/hs38DH.fa"
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Copy homosapiens fasta index
+      ansible.builtin.get_url:
+        url: ftp://anonymous@share.sph.umich.edu/bravo/hs38DH.fa.fai 
+        dest: "{{refs_dir}}/hs38DH.fa.fai"
+        owner: root
+        group: root
+        mode: 0755
+
+- hosts: login
+  become: yes
+  vars:
+    loftee_dir: "/apps/loftee"
+    loftee_data: "/apps/loftee_data"
+  tags:
+    - loftee
+  tasks:
+    - name: Clone Loftee Plugin
+      ansible.builtin.git:
+        repo: "https://github.com/konradjk/loftee.git"
+        depth: 1
+        dest: "{{loftee_dir}}"
+        single_branch: yes
+        version: grch38
+
+    - name: Create lofte data dir
+      ansible.builtin.file:
+        path: "{{loftee_data}}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Copy human ancestor reference
+      ansible.builtin.get_url:
+        url: "{{item}}"
+        dest: "{{loftee_data}}/{{item | basename}}"
+        owner: root
+        group: root
+        mode: 0755
+      loop:
+        - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz
+        - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz.fai
+        - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz.gzi
+
+    - name: Copy GERP scores for GRCh38
+      ansible.builtin.get_url:
+        url: ftp://anonymous@ftp.ensembl.org/pub/current_compara/conservation_scores/91_mammals.gerp_conservation_score/gerp_conservation_scores.homo_sapiens.GRCh38.bw 
+        #http://ftp.ensembl.org/pub/current_compara/conservation_scores/91_mammals.gerp_conservation_score/gerp_conservation_scores.homo_sapiens.GRCh38.bw
+        dest: "{{loftee_data}}/gerp_conservation_scores.homo_sapiens.GRCh38.bw"
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Copy loftee conservation sql lookup for hg38
+      ansible.builtin.get_url:
+        url: https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/loftee.sql.gz 
+        dest: "{{loftee_data}}/loftee.sql.gz"
+        owner: root
+        group: root
+        mode: 0755
+
+- hosts: login
+  become: yes
+  vars:
+    basis_data: "/apps/basis_data"
+    basis_scripts: "/apps/basis_data/scripts"
+  tags:
+    - basis
+  tasks:
+    - name: Create basis dirs
+      ansible.builtin.file:
+        path: "{{item}}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+      loop:
+        - "{{basis_data}}"
+        - "{{basis_scripts}}"
+
+    - name: Push processing script
+      ansible.builtin.copy:
+        src: "scripts/process_hgcn_custom.sh"
+        dest: "{{basis_scripts}}/process_hgcn_custom.sh"
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Get HUGO Gene Nomenclature Comittee (HGNC) data
+      ansible.builtin.get_url:
+        url: "https://www.genenames.org/cgi-bin/download/custom?col=gd_app_sym&col=gd_app_name&col=gd_prev_sym&col=gd_aliases&col=gd_pub_ensembl_id&status=Approved&order_by=gd_app_sym_sort&format=text&submit=submit" 
+        dest: "{{basis_data}}/hgcn_custom_results.txt"
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Check if processed names already exists
+      ansible.builtin.stat: 
+        path: "{{basis_data}}/hgcn_genenames.txt.gz"
+      register: hgcn_names_zipped
+
+    - name: Process HGNC custom query into expected format
+      ansible.builtin.command:
+        chdir: "{{basis_data}}"
+        cmd: "{{basis_scripts}}/process_hgcn_custom.sh"
+      when: hgcn_names_zipped.stat.exists == true

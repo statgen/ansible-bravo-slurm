@@ -13,11 +13,11 @@ INFILE="${PWD}/hgcn_custom_results.txt"
 OUTFILE="${PWD}/hgcn_genenames.txt"
 HEADER="symbol\tname\talias_symbol\tprev_symbol\tensembl_gene_id"
 
-if [[! -f "${INFILE}" ]]; then
+if [[ ! -f "${INFILE}" ]]; then
   echo "file NOT extant"
   exit 1
 fi
 
 echo -e "${HEADER}" > "${OUTFILE}"
 tail -n +2 "${INFILE}" >> "${OUTFILE}"
-gzip "${INFILE}"
+gzip -f "${OUTFILE}"

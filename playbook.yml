@@ -1,6 +1,8 @@
 ---
 - hosts: login
   become: yes
+  tags: 
+    - pkgs
   tasks:
     - name: Update yum cache
       ansible.builtin.yum:
@@ -28,9 +30,12 @@
 
 - hosts: login
   become: yes
+  tags:
+    - nextflow
   vars:
     nf_install_dir: "/apps/nextflow"
     nf_version: "21.10.6"
+    nf_releases: https://github.com/nextflow-io/nextflow/releases/download
   tasks:
     - name: Create nextflow install dir
       ansible.builtin.file:
@@ -45,13 +50,18 @@
         url: "{{ nf_releases }}/v{{ nf_version }}/nextflow"
         dest: "{{ nf_install_dir }}/nextflow"
         creates: "{{ nf_install_dir }}/nextflow"
-      vars:
-        nf_releases: https://github.com/nextflow-io/nextflow/releases/download
 
     - name: Mark Nextflow as executable
       ansible.builtin.file:
         dest: "{{ nf_install_dir }}/nextflow"
-        mode: a+x
+        mode: 0755
+        owner: root
+
+    - name: Add nextflow to PATH
+      ansible.builtin.copy:
+        dest: "/etc/profile.d/nextflow.sh"
+        content: "PATH=\"${PATH}:{{nf_install_dir}}\""
+        mode: 0644
         owner: root
 
 - hosts: login
@@ -175,6 +185,15 @@
         chdir: "{{vep_dir}}"
         cmd: "perl INSTALL.pl --CACHEDIR {{vep_cache_dir}} --PLUGINS all --AUTO ap -q"
 
+- hosts: login
+  become: yes
+  vars:
+    vep_cache_dir: "/apps/vep_cache"
+    vep_cache_file: "homo_sapiens_vep_106_GRCh38.tar.gz"
+    vep_cache_bucket: "bravo-vep-cache"
+  tags:
+    - vep-cache
+  tasks:
     - name: Create VEP cache dir
       ansible.builtin.file:
         path: "{{vep_cache_dir}}"
@@ -184,11 +203,34 @@
         mode: 0755
 
     - name: Install VEP cache
-      ansible.builtin.unarchive:
-        remote_src: yes
-        src: "http://ftp.ensembl.org/pub/release-106/variation/vep/homo_sapiens_vep_106_GRCh38.tar.gz"
-        dest: "{{vep_cache_dir}}"
-        creates: "{{vep_cache_dir}}/homo_sapiens/106_GRCh38"
+      block:
+        - name: Use gsutil to get readme from bucket
+          ansible.builtin.command:
+            chdir: "{{vep_cache_dir}}"
+            argv:
+              - "gsutil"
+              - "cp"
+              - "gs://{{vep_cache_bucket}}/{{vep_cache_file}}"
+              - "{{vep_cache_dir}}/{{vep_cache_file}}"
+            creates: "{{vep_cache_dir}}/{{vep_cache_file}}"
+
+        - name: Unarchive VEP cache from bucket
+          ansible.builtin.unarchive:
+            remote_src: yes
+            src: "{{vep_cache_dir}}/{{vep_cache_file}}"
+            dest: "{{vep_cache_dir}}"
+            creates: "{{vep_cache_dir}}/homo_sapiens/106_GRCh38"
+      rescue:
+        - name: Ensembl download warning
+          ansible.builtin.debug:
+            msg:"Fallback download from Ensembl will run for 5+ hours"
+
+        - name: Install VEP cache from ensemble
+          ansible.builtin.unarchive:
+            remote_src: yes
+            src: "http://ftp.ensembl.org/pub/release-106/variation/vep/homo_sapiens_vep_106_GRCh38.tar.gz"
+            dest: "{{vep_cache_dir}}"
+            creates: "{{vep_cache_dir}}/homo_sapiens/106_GRCh38"
 
 - hosts: login
   become: yes
@@ -207,7 +249,7 @@
 
     - name: Copy homosapiens fasta
       ansible.builtin.get_url:
-        url: ftp://anonymous@share.sph.umich.edu/bravo/hs38DH.fa 
+        url: ftp://anonymous@share.sph.umich.edu/bravo/ref/hs38DH.fa 
         dest: "{{refs_dir}}/hs38DH.fa"
         owner: root
         group: root
@@ -215,7 +257,7 @@
 
     - name: Copy homosapiens fasta index
       ansible.builtin.get_url:
-        url: ftp://anonymous@share.sph.umich.edu/bravo/hs38DH.fa.fai 
+        url: ftp://anonymous@share.sph.umich.edu/bravo/ref/hs38DH.fa.fai 
         dest: "{{refs_dir}}/hs38DH.fa.fai"
         owner: root
         group: root
@@ -319,3 +361,44 @@
         chdir: "{{basis_data}}"
         cmd: "{{basis_scripts}}/process_hgcn_custom.sh"
       when: hgcn_names_zipped.stat.exists == true
+
+- hosts: login
+  become: yes
+  tags:
+    - test
+  tasks:
+    - name: Create test data dir
+      ansible.builtin.file:
+        path: "/home/test_data"
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Download smoke test data set
+      ansible.builtin.unarchive:
+        remote_src: yes
+        src: "ftp://anonymous@share.sph.umich.edu/bravo/pipeline/50_sample_input.tar"
+        dest: "/home/test_data"
+        creates: "/home/test_data/50_sample_input"
+
+- hosts: login
+  become: yes
+  tags:
+    - tooling
+  tasks:
+    - name: Clone Bravo Data Prep to build tools
+      ansible.builtin.git:
+        depth: 1
+        dest: "/apps/data_prep"
+        repo: "https://github.com/statgen/bravo_data_prep.git"
+
+- hosts: login
+  tags:
+    - pipeline
+  tasks:
+    - name: Clone Bravo Data Prep for nextflow pipeline
+      ansible.builtin.git:
+        depth: 1
+        dest: "~/data_prep"
+        repo: "https://github.com/statgen/bravo_data_prep.git"

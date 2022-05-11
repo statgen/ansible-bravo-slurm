@@ -1,5 +1,12 @@
 # Deploy data prep dependencies to slurm cluster on GCP
 
+## Requirements
+```sh
+ansible-galaxy install -r requirements.yml
+```
+
+## Run
+
 Once cluster has been provisioned:
 1. create an ssh config to connect to the login node.
     ```sh

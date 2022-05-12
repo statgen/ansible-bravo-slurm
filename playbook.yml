@@ -190,7 +190,7 @@
   vars:
     vep_cache_dir: "/apps/vep_cache"
     vep_cache_file: "homo_sapiens_vep_106_GRCh38.tar.gz"
-    vep_cache_bucket: "bravo-vep-cache"
+    vep_cache_bucket: "bravo-deploy-cache"
   tags:
     - vep-cache
   tasks:
@@ -221,11 +221,7 @@
             dest: "{{vep_cache_dir}}"
             creates: "{{vep_cache_dir}}/homo_sapiens/106_GRCh38"
       rescue:
-        - name: Ensembl download warning
-          ansible.builtin.debug:
-            msg:"Fallback download from Ensembl will run for 5+ hours"
-
-        - name: Install VEP cache from ensemble
+        - name: Install VEP cache from ensemble (long download)
           ansible.builtin.unarchive:
             remote_src: yes
             src: "http://ftp.ensembl.org/pub/release-106/variation/vep/homo_sapiens_vep_106_GRCh38.tar.gz"
@@ -287,6 +283,15 @@
         group: root
         mode: 0755
 
+    - name: Check for ancestor reference
+      ansible.builtin.stat:
+        follow: yes
+        get_attributes: no
+        get_checksum: no
+        get_mime: no
+        path: "{{loftee_data}}/human_ancestor.fa.gz"
+      register: ancestor_stat
+
     - name: Copy human ancestor reference
       ansible.builtin.get_url:
         url: "{{item}}"
@@ -298,15 +303,25 @@
         - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz
         - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz.fai
         - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz.gzi
+      when: ancestor_stat.stat.exists == false
+
+    - name: Check for GERP Scores
+      ansible.builtin.stat:
+        follow: yes
+        get_attributes: no
+        get_checksum: no
+        get_mime: no
+        path: "{{loftee_data}}/gerp_conservation_scores.homo_sapiens.GRCh38.bw"
+      register: gerp_stat
 
     - name: Copy GERP scores for GRCh38
       ansible.builtin.get_url:
         url: ftp://anonymous@ftp.ensembl.org/pub/current_compara/conservation_scores/91_mammals.gerp_conservation_score/gerp_conservation_scores.homo_sapiens.GRCh38.bw 
-        #http://ftp.ensembl.org/pub/current_compara/conservation_scores/91_mammals.gerp_conservation_score/gerp_conservation_scores.homo_sapiens.GRCh38.bw
         dest: "{{loftee_data}}/gerp_conservation_scores.homo_sapiens.GRCh38.bw"
         owner: root
         group: root
         mode: 0755
+      when: gerp_stat.stat.exists == false
 
     - name: Copy loftee conservation sql lookup for hg38
       ansible.builtin.get_url:

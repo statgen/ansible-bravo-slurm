@@ -3,3 +3,6 @@ ssh_config
 
 # Hard coded gcp ssh convenience script
 connect.sh
+
+# Scrath playbooks
+scratch*

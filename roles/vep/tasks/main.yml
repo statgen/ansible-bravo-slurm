@@ -1,0 +1,86 @@
+---
+- name: Create htslib dir
+  ansible.builtin.file:
+    path: "{{htslib_dir}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Download htslib
+  ansible.builtin.unarchive:
+    remote_src: yes
+    src: "https://github.com/samtools/htslib/releases/download/{{htslib_ver}}/htslib-{{htslib_ver}}.tar.bz2"
+    dest: "{{htslib_dir}}"
+    creates: "{{htslib_dir}}/htslib-{{htslib_ver}}"
+
+- name: Configure htslib
+  ansible.builtin.command:
+    chdir: "{{htslib_dir}}/htslib-{{htslib_ver}}"
+    argv:
+      - "./configure"
+      - "--enable-libcurl"
+
+- name: Build htslib
+  community.general.make:
+    chdir: "{{htslib_dir}}/htslib-{{htslib_ver}}"
+
+- name: Install htslib
+  community.general.make:
+    chdir: "{{htslib_dir}}/htslib-{{htslib_ver}}"
+    target: install
+
+- name: Duplicate tabix so VEP INSTALL can find it.
+  ansible.builtin.file:
+    src: "/usr/local/bin/tabix"
+    path: "/usr/bin/tabix"
+    state: link 
+    mode: 0755
+
+- name: Duplicate bgzip so VEP INSTALL can find it.
+  ansible.builtin.file:
+    src: "/usr/local/bin/bgzip"
+    path: "/usr/bin/bgzip"
+    state: link 
+    mode: 0755
+
+- name: VEP dependency. Update Module build version
+  community.general.cpanm:
+    pkg: "Module::Build" 
+    mode: new
+    version: "0.42"
+
+- name: VEP dependencies. Bio Root
+  community.general.cpanm:
+    pkg: "Bio::Root::Version" 
+
+- name: VEP dependencies. Try Tiny
+  community.general.cpanm:
+    pkg: "Try::Tiny" 
+
+- name: Clone VEP
+  ansible.builtin.git:
+    repo: "https://github.com/Ensembl/ensembl-vep.git"
+    depth: 1
+    dest: "{{vep_dir}}"
+
+- name: Check if VEP already installed via ansible
+  ansible.builtin.stat:
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
+    path: "{{vep_dir}}/.ansible_lock"
+  register: vep_install_lock
+
+- name: Install VEP
+  ansible.builtin.command:
+    chdir: "{{vep_dir}}"
+    cmd: "perl INSTALL.pl --CACHEDIR {{vep_cache_dir}} --PLUGINS all --AUTO ap -q"
+  register: vep_install
+  when: vep_install_lock.stat.exists == false
+
+- name: Create VEP install lockfile
+  ansible.builtin.copy:
+    dest: "{{vep_dir}}/.ansible_lock"
+    content: "VEP installed via Ansible"
+  when: vep_install.changed

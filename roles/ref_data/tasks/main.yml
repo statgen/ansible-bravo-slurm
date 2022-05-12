@@ -1,0 +1,35 @@
+---
+- name: Create references dir
+  ansible.builtin.file:
+    path: "{{refs_dir}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Check for homosapiens fasta
+  ansible.builtin.stat:
+    follow: yes
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
+    path: "{{refs_dir}}/hs38DH.fa"
+  register: fasta_file
+
+- name: Copy homosapiens fasta
+  ansible.builtin.get_url:
+    url: ftp://anonymous@share.sph.umich.edu/bravo/ref/hs38DH.fa 
+    dest: "{{refs_dir}}/hs38DH.fa"
+    owner: root
+    group: root
+    mode: 0755
+  when: fasta_file.stat.exists == false
+
+- name: Copy homosapiens fasta index
+  ansible.builtin.get_url:
+    url: ftp://anonymous@share.sph.umich.edu/bravo/ref/hs38DH.fa.fai 
+    dest: "{{refs_dir}}/hs38DH.fa.fai"
+    owner: root
+    group: root
+    mode: 0755
+  when: fasta_file.stat.exists == false

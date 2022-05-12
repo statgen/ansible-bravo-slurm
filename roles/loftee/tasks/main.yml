@@ -1,0 +1,75 @@
+---
+- name: Clone Loftee Plugin
+  ansible.builtin.git:
+    repo: "https://github.com/konradjk/loftee.git"
+    depth: 1
+    dest: "{{loftee_dir}}"
+    single_branch: yes
+    version: grch38
+
+- name: Create lofte data dir
+  ansible.builtin.file:
+    path: "{{loftee_data}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Check for ancestor reference
+  ansible.builtin.stat:
+    follow: yes
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
+    path: "{{loftee_data}}/human_ancestor.fa.gz"
+  register: anc_file
+
+- name: Check for GERP Scores
+  ansible.builtin.stat:
+    follow: yes
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
+    path: "{{loftee_data}}/gerp_conservation_scores.homo_sapiens.GRCh38.bw"
+  register: gerp_file
+
+- name: Check for Loftee SQL
+  ansible.builtin.stat:
+    follow: yes
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
+    path: "{{loftee_data}}/loftee.sql.gz"
+  register: loftee_sql
+
+- name: Copy human ancestor reference
+  ansible.builtin.get_url:
+    url: "{{item}}"
+    dest: "{{loftee_data}}/{{item | basename}}"
+    owner: root
+    group: root
+    mode: 0755
+  loop:
+    - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz
+    - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz.fai
+    - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz.gzi
+  when: anc_file.stat.exists == false
+
+- name: Copy GERP scores for GRCh38
+  ansible.builtin.get_url:
+    url: ftp://anonymous@ftp.ensembl.org/pub/current_compara/conservation_scores/91_mammals.gerp_conservation_score/gerp_conservation_scores.homo_sapiens.GRCh38.bw 
+    dest: "{{loftee_data}}/gerp_conservation_scores.homo_sapiens.GRCh38.bw"
+    owner: root
+    group: root
+    mode: 0755
+  when: gerp_file.stat.exists == false
+
+- name: Copy loftee conservation sql lookup for hg38
+  ansible.builtin.get_url:
+    url: https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/loftee.sql.gz 
+    dest: "{{loftee_data}}/loftee.sql.gz"
+    owner: root
+    group: root
+    mode: 0755
+  when: loftee_sql.stat.exists == false
+

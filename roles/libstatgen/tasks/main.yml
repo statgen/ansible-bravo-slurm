@@ -1,0 +1,28 @@
+---
+- name: Clone lib StatGen dependency 
+  ansible.builtin.git:
+    depth: 1
+    dest: "{{libstatgen_dir}}"
+    repo: "https://github.com/statgen/libStatGen.git"
+
+- name: Build lib StatGen dependency 
+  community.general.make:
+    chdir: "{{libstatgen_dir}}"
+
+- name: Clone StatGen bamUtil 
+  ansible.builtin.git:
+    depth: 1
+    dest: "{{bamutil_dir}}"
+    repo: "https://github.com/statgen/bamUtil.git"
+
+- name: Build StatGen bamUtil 
+  community.general.make:
+    chdir: "{{bamutil_dir}}"
+
+- name: Clone Loftee plugin for GRCh38
+  ansible.builtin.git:
+    depth: 1
+    dest: "{{loftee_dir}}"
+    repo: "https://github.com/konradjk/loftee.git"
+    single_branch: yes
+    version: grch38

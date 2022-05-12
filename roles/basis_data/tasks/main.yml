@@ -1,0 +1,45 @@
+---
+- name: Create basis dirs
+  ansible.builtin.file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  loop:
+    - "{{basis_data}}"
+    - "{{basis_scripts}}"
+
+- name: Check if custom_result already exists
+  ansible.builtin.stat: 
+    path: "{{basis_data}}/hgcn_custom_results.txt"
+  register: custom_results
+
+- name: Check if processed names already exists
+  ansible.builtin.stat: 
+    path: "{{basis_data}}/hgcn_genenames.txt.gz"
+  register: processed_results
+
+- name: Push processing script
+  ansible.builtin.copy:
+    src: "scripts/process_hgcn_custom.sh"
+    dest: "{{basis_scripts}}/process_hgcn_custom.sh"
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Get HUGO Gene Nomenclature Comittee (HGNC) data
+  ansible.builtin.get_url:
+    url: "https://www.genenames.org/cgi-bin/download/custom?col=gd_app_sym&col=gd_app_name&col=gd_prev_sym&col=gd_aliases&col=gd_pub_ensembl_id&status=Approved&order_by=gd_app_sym_sort&format=text&submit=submit" 
+    dest: "{{basis_data}}/hgcn_custom_results.txt"
+    owner: root
+    group: root
+    mode: 0755
+  when: custom_results.stat.exists == false
+
+- name: Process HGNC custom query into expected format
+  ansible.builtin.command:
+    chdir: "{{basis_data}}"
+    cmd: "{{basis_scripts}}/process_hgcn_custom.sh"
+  when: processed_results.stat.exists == false
+

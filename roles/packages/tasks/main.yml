@@ -1,0 +1,20 @@
+---
+- name: Install dependencies for pipeline tooling
+  ansible.builtin.yum:
+    pkg:
+      - jq
+      - java-11-openjdk-headless
+      - gcc
+      - git
+      - cmake
+      - zlib-devel
+      - epel-release
+      - bzip2-devel
+      - xz-devel
+      - perl-core
+      - perl-CPAN
+      - perl-App-cpanminus
+      - openssl
+      - miniz
+    state: present
+    update_cache: yes

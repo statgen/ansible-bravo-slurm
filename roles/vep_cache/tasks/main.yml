@@ -1,0 +1,34 @@
+---
+- name: Create VEP cache dir
+  ansible.builtin.file:
+    path: "{{vep_cache_dir}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Install VEP cache
+  block:
+    - name: Use gsutil to get readme from bucket
+      ansible.builtin.command:
+        chdir: "{{vep_cache_dir}}"
+        argv:
+          - "gsutil"
+          - "cp"
+          - "gs://{{vep_cache_bucket}}/{{vep_cache_file}}"
+          - "{{vep_cache_dir}}/{{vep_cache_file}}"
+        creates: "{{vep_cache_dir}}/{{vep_cache_file}}"
+
+    - name: Unarchive VEP cache from bucket
+      ansible.builtin.unarchive:
+        remote_src: yes
+        src: "{{vep_cache_dir}}/{{vep_cache_file}}"
+        dest: "{{vep_cache_dir}}"
+        creates: "{{vep_cache_dir}}/homo_sapiens/106_GRCh38"
+  rescue:
+    - name: Install VEP cache from ensemble (long download)
+      ansible.builtin.unarchive:
+        remote_src: yes
+        src: "http://ftp.ensembl.org/pub/release-106/variation/vep/homo_sapiens_vep_106_GRCh38.tar.gz"
+        dest: "{{vep_cache_dir}}"
+        creates: "{{vep_cache_dir}}/homo_sapiens/106_GRCh38"

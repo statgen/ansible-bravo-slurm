@@ -1,0 +1,4 @@
+---
+nf_install_dir: "/apps/nextflow"
+nf_version: "21.10.6"
+nf_releases: https://github.com/nextflow-io/nextflow/releases/download

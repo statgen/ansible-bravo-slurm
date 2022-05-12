@@ -1,0 +1,5 @@
+---
+htslib_dir: "/apps/htslib"
+htslib_ver: "1.15.1"
+vep_dir: "/apps/ensemble_vep"
+vep_cache_dir: "/apps/vep_cache"

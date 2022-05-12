@@ -1,0 +1,15 @@
+---
+- name: Create test data dir
+  ansible.builtin.file:
+    path: "/home/test_data"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Download smoke test data set
+  ansible.builtin.unarchive:
+    remote_src: yes
+    src: "ftp://anonymous@share.sph.umich.edu/bravo/pipeline/50_sample_input.tar"
+    dest: "/home/test_data"
+    creates: "/home/test_data/50_sample_input"

@@ -15,61 +15,67 @@
     group: root
     mode: 0755
 
-- name: Check for ancestor reference
-  ansible.builtin.stat:
-    follow: yes
-    get_attributes: no
-    get_checksum: no
-    get_mime: no
-    path: "{{loftee_data}}/human_ancestor.fa.gz"
-  register: anc_file
+- name: Retrieve human ancestor reference
+  block:
+    - name: Copy human ancestor files from cache bucket
+      ansible.builtin.command:
+        argv:
+          - "gsutil"
+          - "cp"
+          - "gs://{{cache_bucket}}/{{item}}"
+          - "{{loftee_data}}/{{item}}"
+        creates: "{{loftee_data}}/{{item}}"
+      loop:
+        - human_ancestor.fa.gz
+        - human_ancestor.fa.gz.fai
+        - human_ancestor.fa.gz.gzi
+  rescue:
+    - name: Copy human ancestor reference
+      ansible.builtin.get_url:
+        url: "{{item}}"
+        dest: "{{loftee_data}}/{{item | basename}}"
+        owner: root
+        group: root
+        mode: 0755
+      loop:
+        - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz
+        - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz.fai
+        - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz.gzi
 
-- name: Check for GERP Scores
-  ansible.builtin.stat:
-    follow: yes
-    get_attributes: no
-    get_checksum: no
-    get_mime: no
-    path: "{{loftee_data}}/gerp_conservation_scores.homo_sapiens.GRCh38.bw"
-  register: gerp_file
+- name: Retrieve GERP scores for GRCh38
+  block:
+    - name: Copy GERP scores from cache bucket
+      ansible.builtin.command:
+        argv:
+          - "gsutil"
+          - "cp"
+          - "gs://{{cache_bucket}}/gerp_conservation_scores.homo_sapiens.GRCh38.bw"
+          - "{{loftee_data}}/gerp_conservation_scores.homo_sapiens.GRCh38.bw"
+        creates: "{{loftee_data}}/gerp_conservation_scores.homo_sapiens.GRCh38.bw"
+  rescue:
+    - name: Copy GERP scores from Ensembl
+      ansible.builtin.get_url:
+        url: "{{ gerp_scores_url }}"
+        dest: "{{loftee_data}}/gerp_conservation_scores.homo_sapiens.GRCh38.bw"
+        owner: root
+        group: root
+        mode: 0644
 
-- name: Check for Loftee SQL
-  ansible.builtin.stat:
-    follow: yes
-    get_attributes: no
-    get_checksum: no
-    get_mime: no
-    path: "{{loftee_data}}/loftee.sql.gz"
-  register: loftee_sql
-
-- name: Copy human ancestor reference
-  ansible.builtin.get_url:
-    url: "{{item}}"
-    dest: "{{loftee_data}}/{{item | basename}}"
-    owner: root
-    group: root
-    mode: 0755
-  loop:
-    - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz
-    - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz.fai
-    - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz.gzi
-  when: anc_file.stat.exists == false
-
-- name: Copy GERP scores for GRCh38
-  ansible.builtin.get_url:
-    url: ftp://anonymous@ftp.ensembl.org/pub/current_compara/conservation_scores/91_mammals.gerp_conservation_score/gerp_conservation_scores.homo_sapiens.GRCh38.bw 
-    dest: "{{loftee_data}}/gerp_conservation_scores.homo_sapiens.GRCh38.bw"
-    owner: root
-    group: root
-    mode: 0755
-  when: gerp_file.stat.exists == false
-
-- name: Copy loftee conservation sql lookup for hg38
-  ansible.builtin.get_url:
-    url: https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/loftee.sql.gz 
-    dest: "{{loftee_data}}/loftee.sql.gz"
-    owner: root
-    group: root
-    mode: 0755
-  when: loftee_sql.stat.exists == false
-
+- name: Retrieve loftee conservation sql lookup for hg38
+  block:
+    - name: Copy GERP scores from cache bucket
+      ansible.builtin.command:
+        argv:
+          - "gsutil"
+          - "cp"
+          - "gs://{{cache_bucket}}/loftee.sql.gz"
+          - "{{loftee_data}}/loftee.sql.gz"
+        creates: "{{loftee_data}}/loftee.sql.gz"
+  rescue:
+    - name: Copy conservation sql from konradk at Broad
+      ansible.builtin.get_url:
+        url: https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/loftee.sql.gz 
+        dest: "{{loftee_data}}/loftee.sql.gz"
+        owner: root
+        group: root
+        mode: 0644

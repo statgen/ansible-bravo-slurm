@@ -1,3 +1,5 @@
 ---
 loftee_dir: "/apps/loftee"
 loftee_data: "/apps/loftee_data"
+cache_bucket: "bravo-deploy-cache"
+gerp_scores_url: "ftp://anonymous@ftp.ensembl.org/pub/current_compara/conservation_scores/91_mammals.gerp_conservation_score/gerp_conservation_scores.homo_sapiens.GRCh38.bw"

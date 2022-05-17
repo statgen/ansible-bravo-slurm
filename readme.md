@@ -1,5 +1,11 @@
 # Deploy data prep dependencies to slurm cluster on GCP
 
+## Requirements
+If a requirements file is present, install ansible galaxy collections:
+```sh
+ansible-galaxy install -r requirements.yml
+```
+
 ## Run
 
 Once cluster has been provisioned:

@@ -6,3 +6,6 @@ connect.sh
 
 # Scrath playbooks
 scratch*
+
+# Config for using non-default stdout callback
+ansible.cfg

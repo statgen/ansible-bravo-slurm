@@ -1,0 +1,36 @@
+---
+# Version to compile
+GCCVER: '10.3.0'
+
+gcc_configure: '--disable-multilib --enable-languages=c,c++'
+gcc_mirror_url: 'http://mirrors.concertpass.com/gcc/releases'
+gcc_mirror_url_signed: false
+gcc_url: "{{ gcc_mirror_url }}/gcc-{{ GCCVER }}/gcc-{{ GCCVER }}.tar.gz"
+
+binutilsver: 2.37
+gnu_mirror: 'https://ftp.nluug.nl/pub/gnu/'
+binutils_file: "binutils-{{ binutilsver }}.tar.bz2"
+binutils_url: "{{ gnu_mirror }}/binutils/{{ binutils_file }}"
+
+prefix: /usr/local
+
+dependencies_url: 'https://gcc.gnu.org/pub/gcc/infrastructure/'
+dependencies_url_signed: true
+dependencies:
+  - name: gmp
+    dir: 'gmp-6.1.0'
+    file: 'gmp-6.1.0.tar.bz2'
+    md5: 86ee6e54ebfc4a90b643a65e402c4048
+  - name: isl
+    dir: 'isl-0.18'
+    file: 'isl-0.18.tar.bz2'
+    md5: 11436d6b205e516635b666090b94ab32
+  - name: mpc
+    dir: 'mpc-1.0.3'
+    file: 'mpc-1.0.3.tar.gz'
+    md5: d6a1d5f8ddea3abd2cc3e98f58352d26
+  - name: mpfr
+    dir: 'mpfr-3.1.6'
+    file: 'mpfr-3.1.6.tar.bz2'
+    md5: 320c28198def956aeacdb240b46b8969
+

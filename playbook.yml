@@ -13,17 +13,54 @@
     - loftee
     - basis_data
     - test_data
+    - ref_data
+    - gcc
 
 - hosts: login
   become: yes
+  vars:
+    prefix: /apps/local
+  tags:
+    - gcc
+  roles:
+    - gcc
+
+- hosts: login
   tags:
     - tooling
+  vars:
+    - dprep_dir: "/apps/data_prep" 
   tasks:
+    - name: Create data prep tools dir
+      become: yes
+      ansible.builtin.file:
+        group: google-sudoers
+        owner: "{{ ansible_user_id }}"
+        path: "{{ dprep_dir }}"
+        state: directory
+        recurse: yes
     - name: Clone Bravo Data Prep to build tools
+      become: no
       ansible.builtin.git:
         depth: 1
-        dest: "/apps/data_prep"
+        dest: "{{dprep_dir}}"
         repo: "https://github.com/statgen/bravo_data_prep.git"
+        version: fr10-prep
+
+    - name: Install cmake dependency retrieval tool
+      ansible.builtin.pip:
+        name: cget
+        state: present
+
+    - name: Build cpp tooling
+      ansible.builtin.command:
+        chdir: "{{dprep_dir}}/tools/cpp_tools"
+        argv:
+          - "/usr/local/bin/cget"
+          - "install"
+          - "."
+      environment:
+        LD_LIBRARY_PATH: /usr/local/lib64
 
 - hosts: login
   tags:
@@ -34,3 +71,4 @@
         depth: 1
         dest: "~/data_prep"
         repo: "https://github.com/statgen/bravo_data_prep.git"
+        version: fr10-prep

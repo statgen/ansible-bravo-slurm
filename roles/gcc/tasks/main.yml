@@ -1,0 +1,134 @@
+---
+# Derived from dockpack compile_gcc role
+# https://github.com/dockpack/compile_gcc/commit/9b78f15d854077aa3250edbdc51f9a60ee014029
+- name: Create download directory
+  file:
+    path: /tmp/compile_gcc
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+
+- name: Download Binutils source
+  get_url:
+    url: "{{ binutils_url }}"
+    dest: "/tmp/compile_gcc/binutils-{{ binutilsver }}.tar.bz2"
+    mode: 0755
+    validate_certs: false
+  register: download_binutils
+  until: download_binutils is succeeded
+  delay: 2
+  retries: 10
+
+- name: Unpack Binutils source
+  unarchive:
+    src: "/tmp/compile_gcc/binutils-{{ binutilsver }}.tar.bz2"
+    dest: "{{ prefix }}/src"
+    mode: u=rwX,g=rX,o=rX
+    creates: "{{ prefix }}/src/binutils-{{ binutilsver }}"
+    copy: false
+
+- name: Download GCC source
+  get_url:
+    url: "{{ gcc_url }}"
+    dest: "/tmp/compile_gcc/gcc-{{ GCCVER }}.tar.gz"
+    mode: 0755
+    validate_certs: "{{ gcc_mirror_url_signed }}"
+  register: download_gcc_src
+  until: download_gcc_src is succeeded
+  delay: 3
+  retries: 3
+
+- name: Unarchive GCC source
+  unarchive:
+    src: "/tmp/compile_gcc/gcc-{{ GCCVER }}.tar.gz"
+    dest: "{{ prefix }}/src"
+    mode: u=rwX,g=rX,o=rX
+    creates: "{{ prefix }}/src/gcc-{{ GCCVER }}"
+    copy: false
+
+- name: Download GCC dependencies
+  get_url:
+    url: "{{ dependencies_url }}{{ item.file }}"
+    checksum: "md5:{{ item.md5 }}"
+    dest: "{{ prefix }}/src/gcc-{{ GCCVER }}/{{ item.file }}"
+    validate_certs: "{{ dependencies_url_signed }}"
+  loop: "{{ dependencies }}"
+  loop_control:
+    label: "{{ dependencies_url }}{{ item.file }}"
+
+- name: Unarchive GCC dependencies
+  unarchive:
+    src: "{{ prefix }}/src/gcc-{{ GCCVER }}/{{ item.file }}"
+    dest: "{{ prefix }}/src/gcc-{{ GCCVER }}/"
+    mode: u=rwX,g=rX,o=rX
+    creates: "{{ prefix }}/src/gcc-{{ GCCVER }}/{{ item.dir }}"
+    copy: false
+  loop: "{{ dependencies }}"
+  loop_control:
+    label: "{{ prefix }}/src/gcc-{{ GCCVER }}/{{ item.dir }}"
+
+- name: Symlink GCC dependencies
+  file:
+    src: "{{ prefix }}/src/gcc-{{ GCCVER }}/{{ item.dir }}"
+    path: "{{ prefix }}/src/gcc-{{ GCCVER }}/{{ item.name }}"
+    state: link
+    mode: 0777
+  loop: "{{ dependencies }}"
+  loop_control:
+    label: "{{ prefix }}/src/gcc-{{ GCCVER }}/{{ item.name }}"
+
+- name: Check binutils config.status
+  stat:
+    path: "{{ prefix }}/src/binutils-{{ binutilsver }}/config.status"
+  register: binutils_config
+
+- name: Configure Binutils
+  shell: "./configure"
+  args:
+    chdir: "{{ prefix }}/src/binutils-{{ binutilsver }}"
+  when: not binutils_config.stat.exists
+
+- name: Make Binutils
+  shell: "make -j {{ ansible_processor_vcpus }}"
+  args:
+    chdir: "{{ prefix }}/src/binutils-{{ binutilsver }}"
+    creates: "{{ prefix }}/src/binutils-{{ binutilsver }}/ld/ld-new"
+
+- name: Install Binutils
+  command: make install
+  args:
+    chdir: "{{ prefix }}/src/binutils-{{ binutilsver }}"
+    creates: "{{ prefix }}/bin/strip"
+
+- name: Create directory
+  file:
+    path: "{{ prefix }}/src/build"
+    state: directory
+    mode: 0755
+
+- name: Configure GCC source
+  shell: "../gcc-{{ GCCVER }}/configure {{ gcc_configure }}"
+  args:
+    executable: /bin/bash
+    chdir: "{{ prefix }}/src/build"
+    creates: "{{ prefix }}/src/build/config.status"
+
+- name: Make GCC checking libgcc_s.so.1 as evidence
+  shell: "make -j {{ ansible_processor_vcpus }}"
+  args:
+    executable: /bin/bash
+    chdir: "{{ prefix }}/src/build"
+    creates: "{{ prefix }}/src/build/gcc/libgcc_s.so.1"
+
+- name: Install GCC checking cxxabi.h as evidence
+  command: "make -j {{ ansible_processor_vcpus }} install"
+  args:
+    chdir: "{{ prefix }}/src/build"
+    creates: "{{ prefix }}/include/c++/{{ GCCVER }}/cxxabi.h"
+
+- name: Update gcc alternatives
+  community.general.alternatives:
+    name: cmake
+    path: /usr/local/bin/gcc
+    link: /bin/gcc

@@ -1,67 +1,31 @@
 ---
-- name: Create htslib dir
+- name: Create shared for Perl dependencies.
   ansible.builtin.file:
-    path: "{{htslib_dir}}"
+    path: "{{perl5modules_basedir}}"
     state: directory
     owner: root
     group: root
     mode: 0755
 
-- name: Download htslib
-  ansible.builtin.unarchive:
-    remote_src: yes
-    src: "https://github.com/samtools/htslib/releases/download/{{htslib_ver}}/htslib-{{htslib_ver}}.tar.bz2"
-    dest: "{{htslib_dir}}"
-    creates: "{{htslib_dir}}/htslib-{{htslib_ver}}"
-
-- name: Configure htslib
-  ansible.builtin.command:
-    chdir: "{{htslib_dir}}/htslib-{{htslib_ver}}"
-    argv:
-      - "./configure"
-      - "--enable-libcurl"
-
-- name: Build htslib
-  community.general.make:
-    chdir: "{{htslib_dir}}/htslib-{{htslib_ver}}"
-
-- name: Install htslib
-  community.general.make:
-    chdir: "{{htslib_dir}}/htslib-{{htslib_ver}}"
-    target: install
-
-- name: Duplicate tabix so VEP INSTALL can find it.
-  ansible.builtin.file:
-    src: "/usr/local/bin/tabix"
-    path: "/usr/bin/tabix"
-    state: link 
-    mode: 0755
-
-- name: Duplicate bgzip so VEP INSTALL can find it.
-  ansible.builtin.file:
-    src: "/usr/local/bin/bgzip"
-    path: "/usr/bin/bgzip"
-    state: link 
-    mode: 0755
-
-- name: VEP dependency. Update Module build version
+- name: Install VEP Perl dependencies.
   community.general.cpanm:
-    pkg: "Module::Build" 
-    mode: new
-    version: "0.42"
-
-- name: VEP dependencies. Bio Root
-  community.general.cpanm:
-    pkg: "Bio::Root::Version" 
-
-- name: VEP dependencies. Try Tiny
-  community.general.cpanm:
-    pkg: "Try::Tiny" 
+    pkg: "{{item}}" 
+    locallib: "{{perl5modules_basedir}}"
+  loop:
+    - Module::Build
+    - Bio::Root::Version
+    - Try::Tiny
+    - Bio::DB::HTS::Tabix
+    - Set::IntervalTree
+    - JSON
+    - PerlIO::gzip
+    - Test::Warnings
 
 - name: Clone VEP
   ansible.builtin.git:
     repo: "https://github.com/Ensembl/ensembl-vep.git"
     depth: 1
+    version: release/105.0
     dest: "{{vep_dir}}"
 
 - name: Check if VEP already installed via ansible
@@ -75,8 +39,10 @@
 - name: Install VEP
   ansible.builtin.command:
     chdir: "{{vep_dir}}"
-    cmd: "perl INSTALL.pl --CACHEDIR {{vep_cache_dir}} --PLUGINS all --AUTO ap -q"
+    cmd: "perl INSTALL.pl --CACHEDIR {{vep_cache_dir}} --PLUGINS all --AUTO ap -q -n"
   register: vep_install
+  environment:
+    PERL5LIB: "{{perl5lib}}"
   when: vep_install_lock.stat.exists == false
 
 - name: Create VEP install lockfile

@@ -1,52 +1,19 @@
 ---
 - name: Install dependencies for pipeline tooling
-  ansible.builtin.yum:
+  ansible.builtin.apt:
     pkg:
       - jq
-      - java-11-openjdk-headless
-      - gcc
+      - openjdk-11-jre-headless
       - git
-      - cmake3
-      - zlib-devel
-      - epel-release
-      - bzip2-devel
-      - xz-devel
-      - perl-core
-      - perl-CPAN
-      - perl-App-cpanminus
+      - cmake
+      - zlib1g-dev
+      - libbz2-dev
+      - liblzma-dev
+      - perl
+      - cpanminus
       - openssl
-      - miniz
+      - libminizip1
+      - minizip
+      - unzip
     state: present
     update_cache: yes
-
-- name: Use cmake3 as cmake
-  community.general.alternatives:
-    name: cmake
-    path: /bin/cmake3
-    link: /bin/cmake
-
-- name: Install GCC build depdendencies
-  ansible.builtin.yum:
-    pkg:
-      - binutils
-      - bison
-      - flex
-      - gcc
-      - gcc-c++
-      - gdb
-      - glibc-devel
-      - libtool
-      - make
-      - autoconf
-      - automake
-      - diffutils
-      - libstdc++-docs
-      - ncurses-devel
-      - openssl-devel
-      - which
-      - svn
-      - texinfo-tex
-      - unzip
-      - zip
-      - bzip2
-    state: present

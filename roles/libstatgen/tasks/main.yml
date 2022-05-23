@@ -18,11 +18,3 @@
 - name: Build StatGen bamUtil 
   community.general.make:
     chdir: "{{bamutil_dir}}"
-
-- name: Clone Loftee plugin for GRCh38
-  ansible.builtin.git:
-    depth: 1
-    dest: "{{loftee_dir}}"
-    repo: "https://github.com/konradjk/loftee.git"
-    single_branch: yes
-    version: grch38

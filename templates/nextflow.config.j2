@@ -1,0 +1,39 @@
+params {
+  cram_files = "/home/test_data/50_sample_input/crams/*.cram"
+
+  // Inputs
+  reference_path = "/apps/reference/hs38DH.fa"
+
+  // Settings
+  chromosomes = ["chr11"]
+  prune_limits = [1.00, 0.25, 0.50, 0.75]
+}
+
+process {
+
+}
+
+executor {
+  $slurm {
+    queueSize = 100
+    jobName = { "bravo_coverage" }
+  }
+
+  $local {
+    cpus = 2
+   }
+}
+
+// To run on cluster use: nextflow run Coverage.nf -profile slurm
+profiles {
+  standard {
+    process.executor = 'local'
+  }
+  slurm {
+    process.executor = 'slurm'
+    process.queue = "debug"
+    # process.cpus = 1
+    # process.memory = "8 GB"
+    # process.time = "14d"
+  }
+}

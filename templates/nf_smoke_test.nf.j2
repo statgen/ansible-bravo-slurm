@@ -1,0 +1,30 @@
+params.inputs = "/home/test_data/50_sample_input/crams/*.cram"
+
+Channel.fromPath(params.inputs, checkIfExists: true).set{ samples_ch }
+
+process calc_md5s {
+  input:
+  file x from samples_ch
+
+  output:
+  stdout md5_stdout
+
+  script:
+  """
+  md5sum $x
+  """
+}
+
+process collect_md5s {
+  input:
+  val(md5sum) from md5_stdout.collect()
+
+  output:
+  file("md5sums.txt")
+
+  publishDir "result"
+
+  """
+  echo "${md5sum}" > md5sums.txt
+  """
+}

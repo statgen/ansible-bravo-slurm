@@ -73,3 +73,23 @@
         dest: "~/data_prep"
         repo: "https://github.com/statgen/bravo_data_prep.git"
         version: fr10-prep
+
+- hosts: login
+  vars:
+    smoke_test_dir: "~/nf_smoke_test"
+  tasks:
+    - name: Create Nextflow smoke test dir
+      ansible.builtin.file:
+        path: "~/nf_smoke_test"
+        state: directory
+        mode: 0775
+
+    - name: Copy Nextflow smoke test template
+      ansible.builtin.template:
+        dest: "{{smoke_test_dir}}/main.nf"
+        src: "templates/nf_smoke_test.nf.j2"
+
+    - name: Copy Nextflow smoke test config
+      ansible.builtin.template:
+        dest: "{{smoke_test_dir}}/nextflow.config"
+        src: "templates/nextflow.config.j2"

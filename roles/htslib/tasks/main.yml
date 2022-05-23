@@ -1,0 +1,32 @@
+---
+- name: Create htslib dir
+  ansible.builtin.file:
+    path: "{{htslib_dir}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Download htslib
+  ansible.builtin.unarchive:
+    remote_src: yes
+    src: "https://github.com/samtools/htslib/releases/download/{{htslib_ver}}/htslib-{{htslib_ver}}.tar.bz2"
+    dest: "{{htslib_dir}}"
+    creates: "{{htslib_dir}}/htslib-{{htslib_ver}}"
+
+- name: Configure htslib
+  ansible.builtin.command:
+    chdir: "{{htslib_dir}}/htslib-{{htslib_ver}}"
+    argv:
+      - "./configure"
+      - "--enable-libcurl"
+
+- name: Build htslib
+  community.general.make:
+    chdir: "{{htslib_dir}}/htslib-{{htslib_ver}}"
+
+- name: Install htslib
+  community.general.make:
+    chdir: "{{htslib_dir}}/htslib-{{htslib_ver}}"
+    target: install
+

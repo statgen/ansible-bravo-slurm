@@ -1,0 +1,43 @@
+---
+- name: Create samtools base directory
+  become: yes
+  ansible.builtin.file:
+    owner: "{{ ansible_user_id }}"
+    path: "{{ base_dir }}"
+    state: directory
+    mode: 0775
+
+- name: Unpack samtools source into version directory
+  ansible.builtin.unarchive:
+    remote_src: yes
+    src: "{{download_url}}"
+    dest: "{{ base_dir }}"
+    creates: "{{ version_dir }}"
+
+- name: Configure samtools for building from source
+  ansible.builtin.command:
+    chdir: "{{ version_dir }}"
+    argv: 
+      - "./configure"
+      - "--prefix={{version_dir}}"
+
+- name: Make the default samtools target
+  community.general.make:
+    chdir: "{{ version_dir }}"
+
+- name: Make the samtools install target
+  community.general.make:
+    chdir: "{{ version_dir }}"
+    target: install
+
+- name: Create samtools module directory
+  ansible.builtin.file:
+    owner: "{{ ansible_user_id }}"
+    path: "/apps/modulefiles/samtools"
+    state: directory
+    mode: 0775
+
+- name: Create samtools LMOD module file
+  ansible.builtin.template:
+    dest: "/apps/modulefiles/samtools/{{samtools_version}}.lua"
+    src: "templates/lmod_module.lua.j2"

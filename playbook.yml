@@ -13,17 +13,21 @@
     - loftee
     - basis_data
     - test_data
-    - ref_data
-    - gcc
+    - samtools
 
 - hosts: login
-  become: yes
   vars:
-    prefix: /apps/local
+    modulepath: "/apps/modulefiles"
   tags:
-    - gcc
-  roles:
-    - gcc
+    - lmod
+  tasks:
+    - name: Create LMOD modulefiles directory
+      become: yes
+      ansible.builtin.file:
+        owner: "{{ ansible_user_id }}"
+        path: "{{modulepath}}"
+        state: directory
+        mode: 0775
 
 - hosts: login
   tags:
@@ -34,20 +38,19 @@
     - name: Create data prep tools dir
       become: yes
       ansible.builtin.file:
-        group: google-sudoers
         owner: "{{ ansible_user_id }}"
         path: "{{ dprep_dir }}"
         state: directory
         recurse: yes
+
     - name: Clone Bravo Data Prep to build tools
-      become: no
       ansible.builtin.git:
         depth: 1
         dest: "{{dprep_dir}}"
         repo: "https://github.com/statgen/bravo_data_prep.git"
         version: fr10-prep
 
-    - name: Install cmake dependency retrieval tool
+    - name: Install cget dependency retrieval tool
       ansible.builtin.pip:
         name: cget
         state: present
@@ -56,11 +59,9 @@
       ansible.builtin.command:
         chdir: "{{dprep_dir}}/tools/cpp_tools"
         argv:
-          - "/usr/local/bin/cget"
+          - "~/.local/bin/cget"
           - "install"
           - "."
-      environment:
-        LD_LIBRARY_PATH: /usr/local/lib64
 
 - hosts: login
   tags:

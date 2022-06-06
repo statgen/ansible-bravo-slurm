@@ -1,0 +1,14 @@
+help([[
+  VEP module
+]])
+
+local version = "105.0"
+local pkgName = "vep"
+
+prepend_path("PATH", "{{vep_dir}}")
+setenv( "PERL5LIB", "{{perl5lib}}")
+
+whatis("Name: ".. pkgName)
+whatis("Version: " .. version)
+whatis("Category: bio")
+whatis("Description: Ensembl Variant Effect Predictor")

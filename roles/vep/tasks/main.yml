@@ -3,14 +3,14 @@
   ansible.builtin.file:
     path: "{{perl5modules_basedir}}"
     state: directory
-    owner: root
-    group: root
     mode: 0755
 
 - name: Install VEP Perl dependencies.
   community.general.cpanm:
     pkg: "{{item}}" 
     locallib: "{{perl5modules_basedir}}"
+  environment:
+    HTSLIB_DIR: "{{htslib_dir}}/htslib-{{htslib_ver}}"
   loop:
     - Module::Build
     - Bio::Root::Version
@@ -50,3 +50,15 @@
     dest: "{{vep_dir}}/.ansible_lock"
     content: "VEP installed via Ansible"
   when: vep_install.changed
+
+- name: Create VEP module directory
+  ansible.builtin.file:
+    owner: "{{ ansible_user_id }}"
+    path: "/apps/modulefiles/vep"
+    state: directory
+    mode: 0775
+
+- name: Create VEP LMOD module file
+  ansible.builtin.template:
+    dest: "/apps/modulefiles/vep/105.0.lua"
+    src: "templates/lmod_module.lua.j2"

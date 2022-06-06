@@ -3,4 +3,5 @@ perl5modules_basedir: "/apps/perl5modules"
 perl5lib: "{{perl5modules_basedir}}/lib/perl5/x86_64-linux-gnu-thread-multi:{{perl5modules_basedir}}/lib/perl5"
 vep_dir: "/apps/ensemble_vep"
 vep_cache_dir: "/apps/vep_cache"
-
+htslib_dir: "/apps/htslib"
+htslib_ver: "1.15.1"

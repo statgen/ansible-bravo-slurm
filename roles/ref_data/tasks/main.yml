@@ -3,8 +3,6 @@
   ansible.builtin.file:
     path: "{{refs_dir}}"
     state: directory
-    owner: root
-    group: root
     mode: 0755
 
 - name: Copy fasta and fasta index
@@ -34,14 +32,10 @@
       ansible.builtin.get_url:
         url: ftp://anonymous@share.sph.umich.edu/bravo/ref/hs38DH.fa 
         dest: "{{refs_dir}}/hs38DH.fa"
-        owner: root
-        group: root
         mode: 0644
 
     - name: Copy homosapiens fasta index from sph.umich.edu
       ansible.builtin.get_url:
         url: ftp://anonymous@share.sph.umich.edu/bravo/ref/hs38DH.fa.fai 
         dest: "{{refs_dir}}/hs38DH.fa.fai"
-        owner: root
-        group: root
         mode: 0644

@@ -3,8 +3,6 @@
   ansible.builtin.file:
     path: "{{nf_install_dir}}"
     state: directory
-    owner: root
-    group: root
     mode: 0755
 
 - name: Download nextflow
@@ -17,11 +15,9 @@
   ansible.builtin.file:
     dest: "{{ nf_install_dir }}/nextflow"
     mode: 0755
-    owner: root
 
 - name: Add nextflow to PATH
   ansible.builtin.copy:
     dest: "/etc/profile.d/nextflow.sh"
     content: "PATH=\"${PATH}:{{nf_install_dir}}\""
-    mode: 0644
-    owner: root
+    mode: 0755

@@ -3,8 +3,6 @@
   ansible.builtin.file:
     path: "/home/test_data"
     state: directory
-    owner: root
-    group: root
     mode: 0755
 
 - name: Download smoke test data set

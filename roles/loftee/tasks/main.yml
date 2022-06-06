@@ -11,8 +11,6 @@
   ansible.builtin.file:
     path: "{{loftee_data}}"
     state: directory
-    owner: root
-    group: root
     mode: 0755
 
 - name: Retrieve human ancestor reference
@@ -34,8 +32,6 @@
       ansible.builtin.get_url:
         url: "{{item}}"
         dest: "{{loftee_data}}/{{item | basename}}"
-        owner: root
-        group: root
         mode: 0755
       loop:
         - https://s3.amazonaws.com/bcbio_nextgen/human_ancestor.fa.gz
@@ -57,8 +53,6 @@
       ansible.builtin.get_url:
         url: "{{ gerp_scores_url }}"
         dest: "{{loftee_data}}/gerp_conservation_scores.homo_sapiens.GRCh38.bw"
-        owner: root
-        group: root
         mode: 0644
 
 - name: Retrieve loftee conservation sql lookup for hg38
@@ -76,6 +70,4 @@
       ansible.builtin.get_url:
         url: https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/loftee.sql.gz 
         dest: "{{loftee_data}}/loftee.sql.gz"
-        owner: root
-        group: root
         mode: 0644

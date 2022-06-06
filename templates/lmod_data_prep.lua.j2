@@ -1,0 +1,16 @@
+help([[
+  data prep tools module
+]])
+
+local version    = "0.2.0"
+local cpp_base   = "/apps/data_prep/tools/cpp_tools"
+local py_base    = "/apps/data_prep/tools/py_tools"
+local pkgName    = "data_prep_tools"
+
+prepend_path("PATH", pathJoin(py_base))
+prepend_path("PATH", pathJoin(cpp_base,"cget","bin"))
+
+whatis("Name: ".. pkgName)
+whatis("Version: " .. version)
+whatis("Category: bio")
+whatis("Description: BRAVO Data Prep tools")

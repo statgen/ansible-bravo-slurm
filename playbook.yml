@@ -1,19 +1,24 @@
 ---
 - hosts: login
+  tags:
+    - hack
+  tasks:
+    - name: Assign ansible user id as owner of /apps
+      become: yes
+      ansible.builtin.file:
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+        path: "/apps"
+        state: directory
+
+- hosts: login
   become: yes
   tags: 
     - base
   roles:
     - packages
     - nextflow
-    - libstatgen
-    - vep
-    - vep_cache
-    - ref_data
-    - loftee
-    - basis_data
     - test_data
-    - samtools
 
 - hosts: login
   vars:
@@ -22,7 +27,6 @@
     - lmod
   tasks:
     - name: Create LMOD modulefiles directory
-      become: yes
       ansible.builtin.file:
         owner: "{{ ansible_user_id }}"
         path: "{{modulepath}}"
@@ -30,18 +34,33 @@
         mode: 0775
 
 - hosts: login
-  tags:
+  tags: 
     - tooling
   vars:
+    htslib_dir: "/apps/htslib"
+    htslib_ver: "1.15.1"
+  roles:
+    - libstatgen
+    - htslib
+    - vep
+    - vep_cache
+    - loftee
+    - samtools
+    - basis_data
+    - ref_data
+
+- hosts: login
+  tags:
+    - dprep
+  vars:
     - dprep_dir: "/apps/data_prep" 
+    - dprep_module: "/apps/modulefiles/data_prep"
   tasks:
     - name: Create data prep tools dir
-      become: yes
       ansible.builtin.file:
         owner: "{{ ansible_user_id }}"
         path: "{{ dprep_dir }}"
         state: directory
-        recurse: yes
 
     - name: Clone Bravo Data Prep to build tools
       ansible.builtin.git:
@@ -63,9 +82,21 @@
           - "install"
           - "."
 
+    - name: Create cpp tooling LMOD module directory
+      ansible.builtin.file:
+        owner: "{{ ansible_user_id }}"
+        path: "{{ dprep_module }}"
+        state: directory
+
+    - name: Create cpp tooling LMOD module file
+      ansible.builtin.template:
+        dest: "{{ dprep_module }}/0.2.0.lua"
+        src: "templates/lmod_data_prep.lua.j2"
+
 - hosts: login
   tags:
     - pipeline
+    - exp
   tasks:
     - name: Clone Bravo Data Prep for nextflow pipeline
       ansible.builtin.git:
@@ -73,6 +104,20 @@
         dest: "~/data_prep"
         repo: "https://github.com/statgen/bravo_data_prep.git"
         version: fr10-prep
+    - name: Convenience data dir for Coverage workflow
+      ansible.builtin.file:
+        path: "~/data_prep/workflows/coverage/data"
+        state: directory
+    - name: Convenience symlinks to reference Coverage workflow
+      ansible.builtin.file:
+        src: "/apps/reference"
+        dest: "~/data_prep/workflows/coverage/data/ref"
+        state: link
+    - name: Convenience symlinks to crams for Coverage workflow
+      ansible.builtin.file:
+        src: "/home/test_data/50_sample_input/crams"
+        dest: "~/data_prep/workflows/coverage/data/crams"
+        state: link
 
 - hosts: login
   vars:

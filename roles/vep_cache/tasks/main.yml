@@ -3,8 +3,6 @@
   ansible.builtin.file:
     path: "{{vep_cache_dir}}"
     state: directory
-    owner: root
-    group: root
     mode: 0755
 
 - name: Install VEP cache

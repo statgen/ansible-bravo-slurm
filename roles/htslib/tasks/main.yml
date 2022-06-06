@@ -3,8 +3,6 @@
   ansible.builtin.file:
     path: "{{htslib_dir}}"
     state: directory
-    owner: root
-    group: root
     mode: 0755
 
 - name: Download htslib
@@ -25,8 +23,14 @@
   community.general.make:
     chdir: "{{htslib_dir}}/htslib-{{htslib_ver}}"
 
-- name: Install htslib
-  community.general.make:
-    chdir: "{{htslib_dir}}/htslib-{{htslib_ver}}"
-    target: install
+- name: Create htslib module directory
+  ansible.builtin.file:
+    owner: "{{ ansible_user_id }}"
+    path: "/apps/modulefiles/htslib"
+    state: directory
+    mode: 0775
 
+- name: Create htslib LMOD module file
+  ansible.builtin.template:
+    dest: "/apps/modulefiles/htslib/{{htslib_ver}}.lua"
+    src: "templates/lmod_module.lua.j2"

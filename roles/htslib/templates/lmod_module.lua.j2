@@ -1,0 +1,15 @@
+help([[
+  HTSLib module
+  Provides bgzip and tabix 
+]])
+
+local version = "{{htslib_ver}}"
+local pkgName = "htslib"
+
+prepend_path("PATH", "{{htslib_dir}}/htslib-{{htslib_ver}}")
+prepend_path("LD_LIBRARY_PATH", "{{htslib_dir}}/htslib-{{htslib_ver}}")
+
+whatis("Name: ".. pkgName)
+whatis("Version: " .. version)
+whatis("Category: bio")
+whatis("Description: HTSLib for accessing SAM, CRAM, and VCF files")

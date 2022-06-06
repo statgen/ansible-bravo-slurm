@@ -1,0 +1,14 @@
+help([[
+  bamUtils module
+]])
+
+local version = "1.0.15"
+local base    = "/apps/bamUtil"
+local pkgName = "bam_utils"
+
+prepend_path("PATH", pathJoin(base, "bin"))
+
+whatis("Name: ".. pkgName)
+whatis("Version: " .. version)
+whatis("Category: bio")
+whatis("Description: Statgen bam utility tool")

@@ -18,3 +18,14 @@
 - name: Build StatGen bamUtil 
   community.general.make:
     chdir: "{{bamutil_dir}}"
+
+- name: Create bamUtil module directory
+  ansible.builtin.file:
+    path: "/apps/modulefiles/bam_util"
+    state: directory
+    mode: 0775
+
+- name: Create bamUtil LMOD module file
+  ansible.builtin.template:
+    dest: "/apps/modulefiles/bam_util/1.0.15.lua"
+    src: "templates/lmod_module.lua.j2"

@@ -1,0 +1,15 @@
+help([[
+  python alias and library path module
+]])
+
+local version    = "3"
+local pkgName    = "python_alias"
+
+prepend_path("PATH", "{{python_lib}}/bin")
+setenv("PYTHONPATH", "{{python_lib}}")
+set_alias("python", "python3")
+
+whatis("Name: ".. pkgName)
+whatis("Version: " .. version)
+whatis("Category: bio")
+whatis("Description: Python3 is python alias")

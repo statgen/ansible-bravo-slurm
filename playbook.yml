@@ -18,9 +18,9 @@
   roles:
     - packages
     - nextflow
-    - test_data
 
 - hosts: login
+  gather_facts: no
   vars:
     modulepath: "/apps/modulefiles"
   tags:
@@ -34,6 +34,7 @@
         mode: 0775
 
 - hosts: login
+  gather_facts: no
   tags: 
     - tooling
   vars:
@@ -46,15 +47,22 @@
     - vep_cache
     - loftee
     - samtools
-    - basis_data
-    - ref_data
 
 - hosts: login
+  tags: 
+    - data
+  roles:
+    - basis_data
+    - ref_data
+    - test_data
+
+- hosts: login
+  gather_facts: no
   tags:
     - dprep
   vars:
-    - dprep_dir: "/apps/data_prep" 
-    - dprep_module: "/apps/modulefiles/data_prep"
+    dprep_dir: "/apps/data_prep" 
+    dprep_module: "/apps/modulefiles/data_prep"
   tasks:
     - name: Create data prep tools dir
       ansible.builtin.file:
@@ -94,9 +102,12 @@
         src: "templates/lmod_data_prep.lua.j2"
 
 - hosts: login
+  gather_facts: no
   tags:
     - pipeline
-    - exp
+  vars:
+    loftee_dir: "/apps/loftee"
+    loftee_data: "/apps/loftee_data"
   tasks:
     - name: Clone Bravo Data Prep for nextflow pipeline
       ansible.builtin.git:
@@ -104,22 +115,45 @@
         dest: "~/data_prep"
         repo: "https://github.com/statgen/bravo_data_prep.git"
         version: fr10-prep
+
     - name: Convenience data dir for Coverage workflow
       ansible.builtin.file:
         path: "~/data_prep/workflows/coverage/data"
         state: directory
-    - name: Convenience symlinks to reference Coverage workflow
+      loop:
+
+    - name: Convenience symlinks Coverage workflow
       ansible.builtin.file:
-        src: "/apps/reference"
-        dest: "~/data_prep/workflows/coverage/data/ref"
+        src: "{{item.src}}"
+        dest: "{{item.dest}}"
         state: link
-    - name: Convenience symlinks to crams for Coverage workflow
+      loop:
+        - src: "/apps/reference"
+          dest: "~/data_prep/workflows/coverage/data/ref"
+
+        - src: "/home/test_data/50_sample_input/crams"
+          dest: "~/data_prep/workflows/coverage/data/crams"
+
+    - name: Convenience symlinks for Prepare VCF workflow
       ansible.builtin.file:
-        src: "/home/test_data/50_sample_input/crams"
-        dest: "~/data_prep/workflows/coverage/data/crams"
+        src: "{{item.src}}"
+        dest: "{{item.dest}}"
         state: link
+      loop:
+        - src: "/apps/loftee"
+          dest: "~/data_prep/workflows/prepare_vcf/loftee"
+
+        - src: "/apps/loftee_data"
+          dest: "~/data_prep/workflows/prepare_vcf/loftee_data"
+
+        - src: "/apps/data_prep/tools/py_tools/add_cadd_scores.py"
+          dest: "~/data_prep/workflows/prepare_vcf/add_cadd_scores.py"
+
+        - src: "/home/test_data/50_sample_input/bcfs"
+          dest: "~/data_prep/workflows/prepare_vcf/bcfs"
 
 - hosts: login
+  gather_facts: no
   vars:
     smoke_test_dir: "~/nf_smoke_test"
   tasks:
@@ -138,3 +172,44 @@
       ansible.builtin.template:
         dest: "{{smoke_test_dir}}/nextflow.config"
         src: "templates/nextflow.config.j2"
+
+- hosts: login
+  gather_facts: no
+  vars:
+    python_lib: "/apps/python3/lib"
+    python_module: "/apps/modulefiles/python3"
+  tasks:
+    - name: Create Python3 shared libraries dir
+      ansible.builtin.file:
+        path: "{{item}}"
+        state: directory
+        mode: 0775
+      loop:
+        - "{{python_lib}}"
+        - "{{python_lib}}/bin"
+
+    - name: Hack symlink python3 to preempt python2 in PATH 
+      ansible.builtin.file:
+        src: "/usr/bin/python3"
+        path: "{{python_lib}}/bin/python"
+        state: link
+
+    - name: Install shared python libraries
+      ansible.builtin.pip:
+        name: "{{item}}"
+        extra_args: "--target {{python_lib}}"
+      loop:
+        - pysam
+        - numpy
+        - python-rapidjson
+
+    - name: Create python alias LMOD module directory
+      ansible.builtin.file:
+        owner: "{{ ansible_user_id }}"
+        path: "{{ python_module }}"
+        state: directory
+
+    - name: Create python alias LMOD module file
+      ansible.builtin.template:
+        dest: "{{ python_module }}/python_alias.lua"
+        src: "templates/lmod_python3.lua.j2"

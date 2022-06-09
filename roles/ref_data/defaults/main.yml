@@ -1,3 +1,4 @@
 ---
 refs_dir: "/apps/reference"
+cadd_scores_url: "https://krishna.gs.washington.edu/download/CADD/v1.5/GRCh38/whole_genome_SNVs.tsv.gz"
 cache_bucket: "bravo-deploy-cache"

@@ -47,6 +47,8 @@
     - vep_cache
     - loftee
     - samtools
+    - python3
+    - data_prep_tooling
 
 - hosts: login
   tags: 
@@ -55,51 +57,6 @@
     - basis_data
     - ref_data
     - test_data
-
-- hosts: login
-  gather_facts: no
-  tags:
-    - dprep
-  vars:
-    dprep_dir: "/apps/data_prep" 
-    dprep_module: "/apps/modulefiles/data_prep"
-  tasks:
-    - name: Create data prep tools dir
-      ansible.builtin.file:
-        owner: "{{ ansible_user_id }}"
-        path: "{{ dprep_dir }}"
-        state: directory
-
-    - name: Clone Bravo Data Prep to build tools
-      ansible.builtin.git:
-        depth: 1
-        dest: "{{dprep_dir}}"
-        repo: "https://github.com/statgen/bravo_data_prep.git"
-        version: fr10-prep
-
-    - name: Install cget dependency retrieval tool
-      ansible.builtin.pip:
-        name: cget
-        state: present
-
-    - name: Build cpp tooling
-      ansible.builtin.command:
-        chdir: "{{dprep_dir}}/tools/cpp_tools"
-        argv:
-          - "~/.local/bin/cget"
-          - "install"
-          - "."
-
-    - name: Create cpp tooling LMOD module directory
-      ansible.builtin.file:
-        owner: "{{ ansible_user_id }}"
-        path: "{{ dprep_module }}"
-        state: directory
-
-    - name: Create cpp tooling LMOD module file
-      ansible.builtin.template:
-        dest: "{{ dprep_module }}/0.2.0.lua"
-        src: "templates/lmod_data_prep.lua.j2"
 
 - hosts: login
   gather_facts: no
@@ -173,43 +130,3 @@
         dest: "{{smoke_test_dir}}/nextflow.config"
         src: "templates/nextflow.config.j2"
 
-- hosts: login
-  gather_facts: no
-  vars:
-    python_lib: "/apps/python3/lib"
-    python_module: "/apps/modulefiles/python3"
-  tasks:
-    - name: Create Python3 shared libraries dir
-      ansible.builtin.file:
-        path: "{{item}}"
-        state: directory
-        mode: 0775
-      loop:
-        - "{{python_lib}}"
-        - "{{python_lib}}/bin"
-
-    - name: Hack symlink python3 to preempt python2 in PATH 
-      ansible.builtin.file:
-        src: "/usr/bin/python3"
-        path: "{{python_lib}}/bin/python"
-        state: link
-
-    - name: Install shared python libraries
-      ansible.builtin.pip:
-        name: "{{item}}"
-        extra_args: "--target {{python_lib}}"
-      loop:
-        - pysam
-        - numpy
-        - python-rapidjson
-
-    - name: Create python alias LMOD module directory
-      ansible.builtin.file:
-        owner: "{{ ansible_user_id }}"
-        path: "{{ python_module }}"
-        state: directory
-
-    - name: Create python alias LMOD module file
-      ansible.builtin.template:
-        dest: "{{ python_module }}/python_alias.lua"
-        src: "templates/lmod_python3.lua.j2"

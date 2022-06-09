@@ -1,2 +1,35 @@
 ---
+- name: Create data prep tools dir
+  ansible.builtin.file:
+    path: "{{ dprep_dir }}"
+    state: directory
 
+- name: Clone Bravo Data Prep to build tools
+  ansible.builtin.git:
+    depth: 1
+    dest: "{{dprep_dir}}"
+    repo: "https://github.com/statgen/bravo_data_prep.git"
+    version: fr10-prep
+
+- name: Install cget dependency retrieval tool
+  ansible.builtin.pip:
+    name: cget
+    state: present
+
+- name: Build cpp tooling
+  ansible.builtin.command:
+    chdir: "{{dprep_dir}}/tools/cpp_tools"
+    argv:
+      - "~/.local/bin/cget"
+      - "install"
+      - "."
+
+- name: Create cpp tooling LMOD module directory
+  ansible.builtin.file:
+    path: "{{ dprep_module }}"
+    state: directory
+
+- name: Create cpp tooling LMOD module file
+  ansible.builtin.template:
+    dest: "{{ dprep_module }}/0.2.0.lua"
+    src: "templates/lmod_module.lua.j2"

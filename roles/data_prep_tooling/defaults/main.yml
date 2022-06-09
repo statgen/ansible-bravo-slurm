@@ -1,2 +1,3 @@
 ---
-
+dprep_dir: "/apps/data_prep" 
+dprep_module: "/apps/modulefiles/data_prep"

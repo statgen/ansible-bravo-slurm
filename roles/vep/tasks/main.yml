@@ -53,7 +53,6 @@
 
 - name: Create VEP module directory
   ansible.builtin.file:
-    owner: "{{ ansible_user_id }}"
     path: "/apps/modulefiles/vep"
     state: directory
     mode: 0775

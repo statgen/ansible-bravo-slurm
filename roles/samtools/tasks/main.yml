@@ -2,7 +2,6 @@
 - name: Create samtools base directory
   become: yes
   ansible.builtin.file:
-    owner: "{{ ansible_user_id }}"
     path: "{{ base_dir }}"
     state: directory
     mode: 0775
@@ -32,7 +31,6 @@
 
 - name: Create samtools module directory
   ansible.builtin.file:
-    owner: "{{ ansible_user_id }}"
     path: "/apps/modulefiles/samtools"
     state: directory
     mode: 0775

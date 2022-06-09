@@ -57,7 +57,7 @@
 
 - name: Retrieve loftee conservation sql lookup for hg38
   block:
-    - name: Copy GERP scores from cache bucket
+    - name: Copy GERP scores sql from cache bucket
       ansible.builtin.command:
         argv:
           - "gsutil"
@@ -65,9 +65,18 @@
           - "gs://{{cache_bucket}}/loftee.sql.gz"
           - "{{loftee_data}}/loftee.sql.gz"
         creates: "{{loftee_data}}/loftee.sql.gz"
+
   rescue:
-    - name: Copy conservation sql from konradk at Broad
+    - name: Obtain whole genome cadd from washington.edu
       ansible.builtin.get_url:
-        url: https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/loftee.sql.gz 
-        dest: "{{loftee_data}}/loftee.sql.gz"
+        url: "https://personal.broadinstitute.org/konradk/loftee_data/GRCh38/loftee.sql.gz"
+        dest: "{{loftee_data}}/cadd/loftee.sql.gz"
         mode: 0644
+
+- name: Unpack loftee sql archive
+  ansible.builtin.command:
+    chdir: "{{loftee_data}}"
+    argv:
+      - "gunzip"
+      - "loftee.sql.gz"
+    creates: "{{loftee_data}}/loftee.sql"

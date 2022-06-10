@@ -1,6 +1,5 @@
 ---
 - name: Create samtools base directory
-  become: yes
   ansible.builtin.file:
     path: "{{ base_dir }}"
     state: directory

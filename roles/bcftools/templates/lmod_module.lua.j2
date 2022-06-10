@@ -1,0 +1,15 @@
+help([[
+  bcftools module
+]])
+
+local version = "{{bcftools_version}}"
+local base    = "{{version_dir}}"
+local pkgName = myModuleName()
+
+prepend_path("PATH", pathJoin(base,"bin"))
+
+whatis("Name: ".. pkgName)
+whatis("Version: " .. version)
+whatis("Category: bio")
+whatis("URL: http://www.hstlib.org")
+whatis("Description: BCF file handling utility")

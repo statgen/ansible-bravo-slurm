@@ -1,0 +1,40 @@
+---
+- name: Create bcftools base directory
+  ansible.builtin.file:
+    path: "{{ base_dir }}"
+    state: directory
+    mode: 0775
+
+- name: Unpack bcftools source into version directory
+  ansible.builtin.unarchive:
+    remote_src: yes
+    src: "{{download_url}}"
+    dest: "{{ base_dir }}"
+    creates: "{{ version_dir }}"
+
+- name: Configure bcftools for building from source
+  ansible.builtin.command:
+    chdir: "{{ version_dir }}"
+    argv: 
+      - "./configure"
+      - "--prefix={{version_dir}}"
+
+- name: Make the default bcftools target
+  community.general.make:
+    chdir: "{{ version_dir }}"
+
+- name: Make the bcftools install target
+  community.general.make:
+    chdir: "{{ version_dir }}"
+    target: install
+
+- name: Create bcftools module directory
+  ansible.builtin.file:
+    path: "/apps/modulefiles/bcftools"
+    state: directory
+    mode: 0775
+
+- name: Create bcftools LMOD module file
+  ansible.builtin.template:
+    dest: "/apps/modulefiles/bcftools/{{bcftools_version}}.lua"
+    src: "templates/lmod_module.lua.j2"

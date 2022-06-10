@@ -1,0 +1,6 @@
+---
+bcftools_version: "1.15.1"
+base_url: "https://github.com/samtools/bcftools/releases/download"
+download_url: "{{base_url}}/{{bcftools_version}}/bcftools-{{bcftools_version}}.tar.bz2" 
+base_dir: "/apps/bcftools"
+version_dir: "{{base_dir}}/bcftools-{{bcftools_version}}"

@@ -9,7 +9,6 @@
       - zlib1g-dev
       - libbz2-dev
       - liblzma-dev
-      - perl
       - cpanminus
       - openssl
       - libminizip1

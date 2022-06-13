@@ -27,6 +27,7 @@
     - lmod
   tasks:
     - name: Create LMOD modulefiles directory
+      become: yes
       ansible.builtin.file:
         owner: "{{ ansible_user_id }}"
         path: "{{modulepath}}"
@@ -57,7 +58,8 @@
   roles:
     - basis_data
     - ref_data
-    - test_data
+    - role: test_data
+      become: yes
 
 - hosts: login
   gather_facts: no

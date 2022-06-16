@@ -1,5 +1,6 @@
 ---
 vep_cache_dir: "/apps/vep_cache"
-vep_cache_file: "homo_sapiens_vep_106_GRCh38.tar.gz"
+vep_release: "105"
+vep_cache_file: "homo_sapiens_vep_{{vep_release}}_GRCh38.tar.gz"
 vep_cache_bucket: "bravo-deploy-cache"
 

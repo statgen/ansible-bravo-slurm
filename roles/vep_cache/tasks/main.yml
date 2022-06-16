@@ -22,11 +22,11 @@
         remote_src: yes
         src: "{{vep_cache_dir}}/{{vep_cache_file}}"
         dest: "{{vep_cache_dir}}"
-        creates: "{{vep_cache_dir}}/homo_sapiens/106_GRCh38"
+        creates: "{{vep_cache_dir}}/homo_sapiens/{{vep_release}}_GRCh38"
   rescue:
     - name: Install VEP cache from ensemble (long download)
       ansible.builtin.unarchive:
         remote_src: yes
-        src: "http://ftp.ensembl.org/pub/release-106/variation/vep/homo_sapiens_vep_106_GRCh38.tar.gz"
+        src: "http://ftp.ensembl.org/pub/release-{{vep_release}}/variation/vep/{{vep_cache_file}}"
         dest: "{{vep_cache_dir}}"
-        creates: "{{vep_cache_dir}}/homo_sapiens/106_GRCh38"
+        creates: "{{vep_cache_dir}}/homo_sapiens/{{vep_release}}_GRCh38"

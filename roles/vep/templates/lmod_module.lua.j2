@@ -6,7 +6,7 @@ local version = "105.0"
 local pkgName = "vep"
 
 prepend_path("PATH", "{{vep_dir}}")
-setenv( "PERL5LIB", "{{perl5lib}}")
+setenv( "PERL5LIB", "{{perl5lib_dirs | join(':')}}")
 
 whatis("Name: ".. pkgName)
 whatis("Version: " .. version)

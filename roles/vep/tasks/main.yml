@@ -11,6 +11,7 @@
     locallib: "{{perl5modules_basedir}}"
   environment:
     HTSLIB_DIR: "{{htslib_dir}}/htslib-{{htslib_ver}}"
+    PERL5LIB: "{{perl5modules_basedir}}"
   loop:
     - Module::Build
     - Bio::Root::Version
@@ -18,8 +19,17 @@
     - Bio::DB::HTS::Tabix
     - Set::IntervalTree
     - JSON
-    - PerlIO::gzip
     - Test::Warnings
+
+- name: Force Install VEP Perl dependencies.
+  environment:
+    PERL5LIB: "{{perl5modules_basedir}}"
+    PERL_MM_USE_DEFAULT: "1"
+  ansible.builtin.command:
+    cmd: "perl -Mlocal::lib={{perl5modules_basedir}} -MCPAN -e 'force install {{item}}'"
+  loop:
+    - PerlIO::gzip
+    - Try::Tiny
 
 - name: Clone VEP
   ansible.builtin.git:

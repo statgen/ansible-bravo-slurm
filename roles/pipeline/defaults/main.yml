@@ -1,0 +1,4 @@
+---
+loftee_dir: "/apps/loftee"
+loftee_data: "/apps/loftee_data"
+smoke_test_dir: "~/nf_smoke_test"

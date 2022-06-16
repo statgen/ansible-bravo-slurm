@@ -9,3 +9,9 @@ scratch*
 
 # Config for using non-default stdout callback
 ansible.cfg
+
+# data and archives
+*.tar
+*.tgz
+*.gz
+*.bz2

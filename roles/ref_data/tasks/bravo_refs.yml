@@ -1,0 +1,59 @@
+---
+- name: Make api backing data directory
+  ansible.builtin.file:
+    path: "{{api_dir}}"
+    state: directory
+
+- name: Get canonical transcripts
+  ansible.builtin.uri:
+    url: "{{biomart_url}}?query={{transcripts_xml | urlencode}}"
+    dest:    "{{api_dir}}/canonical_transcripts.txt"
+    creates: "{{api_dir}}/canonical_transcripts.txt"
+
+- name: Gzip canonical transcripts
+  community.general.archive:
+    path: "{{api_dir}}/canonical_transcripts.txt"
+    dest: "{{api_dir}}/canonical_transcripts.txt.gz"
+
+- name: Get OMIM file
+  ansible.builtin.uri:
+    url: "{{biomart_url}}?query={{omim_xml | urlencode}}"
+    dest:    "{{api_dir}}/omim_ensembl_refs.txt"
+    creates: "{{api_dir}}/omim_ensembl_refs.txt"
+
+- name: Gzip OMIM file
+  community.general.archive:
+    path: "{{api_dir}}/omim_ensembl_refs.txt"
+    dest: "{{api_dir}}/omim_ensembl_refs.txt.gz"
+
+- name: Get genecode annotations
+  ansible.builtin.uri:
+    url: "{{genecode_url}}"
+    dest:    "{{api_dir}}/gencode.v38.annotation.gtf.gz"
+    creates: "{{api_dir}}/gencode.v38.annotation.gtf.gz"
+
+- name: Get HUGO custom results
+  ansible.builtin.uri:
+    url: "https://www.genenames.org/cgi-bin/download/custom?\
+      col=gd_app_sym&col=gd_app_name&col=gd_prev_sym&col=gd_aliases&\
+      col=gd_pub_ensembl_id&status=Approved&order_by=gd_app_sym_sort&\
+      format=text&submit=submit"
+    dest:    "{{api_dir}}/hgcn_custom_results.txt"
+    creates: "{{api_dir}}/hgcn_custom_results.txt"
+
+- name: Copy HUGO custom header
+  ansible.builtin.copy:
+    src: "files/hgcn_header.txt"
+    dest: "{{api_dir}}/hgcn_genenames.txt"
+    force: no
+
+- name: Append HUGO data under custom header
+  ansible.builtin.shell:
+    chdir: "{{api_dir}}"
+    cmd: tail -n +2 hgcn_custom_results.txt >> hgcn_genenames.txt
+    creates: "{{api_dir}}/hgcn_genenames.txt.gz"
+
+- name: Gzip HUGO gene names
+  community.general.archive:
+    path: "{{api_dir}}/hgcn_genenames.txt"
+    dest: "{{api_dir}}/hgcn_genenames.txt.gz"

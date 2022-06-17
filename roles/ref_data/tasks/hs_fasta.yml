@@ -1,0 +1,36 @@
+---
+- name: Copy fasta and fasta index
+  block:
+    - name: Copy homosapiens fasta from cache bucket
+      ansible.builtin.command:
+        chdir: "{{refs_dir}}"
+        argv:
+          - "gsutil"
+          - "cp"
+          - "gs://{{cache_bucket}}/hs38DH.fa"
+          - "{{refs_dir}}/hs38DH.fa"
+        creates: "{{refs_dir}}/hs38DH.fa"
+
+    - name: Copy homosapiens fasta index from cache bucket
+      ansible.builtin.command:
+        chdir: "{{refs_dir}}"
+        argv:
+          - "gsutil"
+          - "cp"
+          - "gs://{{cache_bucket}}/hs38DH.fa.fai"
+          - "{{refs_dir}}/hs38DH.fa.fai"
+        creates: "{{refs_dir}}/hs38DH.fa.fai"
+
+  rescue:
+    - name: Copy homosapiens fasta from sph.umich.edu
+      ansible.builtin.get_url:
+        url: ftp://anonymous@share.sph.umich.edu/bravo/ref/hs38DH.fa 
+        dest: "{{refs_dir}}/hs38DH.fa"
+        mode: 0644
+
+    - name: Copy homosapiens fasta index from sph.umich.edu
+      ansible.builtin.get_url:
+        url: ftp://anonymous@share.sph.umich.edu/bravo/ref/hs38DH.fa.fai 
+        dest: "{{refs_dir}}/hs38DH.fa.fai"
+        mode: 0644
+

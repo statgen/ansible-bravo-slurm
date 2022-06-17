@@ -1,4 +1,11 @@
 ---
 refs_dir: "/apps/reference"
+api_dir: "{{refs_dir}}/api"
+
 cadd_scores_url: "https://krishna.gs.washington.edu/download/CADD/v1.5/GRCh38/whole_genome_SNVs.tsv.gz"
 cache_bucket: "bravo-deploy-cache"
+
+genecode_url: "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_38/gencode.v38.annotation.gtf.gz"
+biomart_url: "https://www.ensembl.org/biomart/martservice"
+transcripts_xml: "{{lookup('file','files/transcripts_query.xml')}}"
+omim_xml: "{{lookup('file','files/omim_query.xml')}}"

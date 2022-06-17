@@ -1,0 +1,29 @@
+---
+- name: Download CADD scores
+  block:
+    - name: Obtain CADD scores from cache bucket
+      ansible.builtin.command:
+        chdir: "{{refs_dir}}/cadd"
+        argv:
+          - "gsutil"
+          - "cp"
+          - "gs://{{cache_bucket}}/{{item}}"
+          - "{{item}}"
+        creates: "{{refs_dir}}/cadd/{{item}}"
+      loop:
+        - whole_genome_SNVs.tsv.gz
+        - whole_genome_SNVs.tsv.gz.tbi
+
+  rescue:
+    - name: Obtain whole genome cadd from washington.edu
+      ansible.builtin.get_url:
+        url: https://krishna.gs.washington.edu/download/CADD/v1.6/GRCh38/whole_genome_SNVs.tsv.gz
+        dest: "{{refs_dir}}/cadd/whole_genome_SNVs.tsv.gz"
+        mode: 0644
+
+    - name: Obtain whole genome cadd index from washington.edu
+      ansible.builtin.get_url:
+        url: https://krishna.gs.washington.edu/download/CADD/v1.6/GRCh38/whole_genome_SNVs.tsv.gz.tbi 
+        dest: "{{refs_dir}}/cadd/hs38DH.fa.fai"
+        mode: 0644
+

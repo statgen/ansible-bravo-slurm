@@ -67,15 +67,3 @@
     - pipeline
   roles:
     - pipeline
-
-- hosts: login
-  gather_facts: no
-  tags:
-    - exp
-  tasks:
-    - name: Placeholder
-      ansible.builtin.file:
-        path: "~/temp"
-        state: directory
-        mode: 0775
-      when: no

@@ -7,24 +7,24 @@
 - name: Get canonical transcripts
   ansible.builtin.uri:
     url: "{{biomart_url}}?query={{transcripts_xml | urlencode}}"
-    dest:    "{{api_dir}}/canonical_transcripts.txt"
-    creates: "{{api_dir}}/canonical_transcripts.txt"
+    dest:    "{{api_dir}}/canonical_transcripts.tsv"
+    creates: "{{api_dir}}/canonical_transcripts.tsv"
 
 - name: Gzip canonical transcripts
   community.general.archive:
-    path: "{{api_dir}}/canonical_transcripts.txt"
-    dest: "{{api_dir}}/canonical_transcripts.txt.gz"
+    path: "{{api_dir}}/canonical_transcripts.tsv"
+    dest: "{{api_dir}}/canonical_transcripts.tsv.gz"
 
 - name: Get OMIM file
   ansible.builtin.uri:
     url: "{{biomart_url}}?query={{omim_xml | urlencode}}"
-    dest:    "{{api_dir}}/omim_ensembl_refs.txt"
-    creates: "{{api_dir}}/omim_ensembl_refs.txt"
+    dest:    "{{api_dir}}/omim_ensembl_refs.tsv"
+    creates: "{{api_dir}}/omim_ensembl_refs.tsv"
 
 - name: Gzip OMIM file
   community.general.archive:
-    path: "{{api_dir}}/omim_ensembl_refs.txt"
-    dest: "{{api_dir}}/omim_ensembl_refs.txt.gz"
+    path: "{{api_dir}}/omim_ensembl_refs.tsv"
+    dest: "{{api_dir}}/omim_ensembl_refs.tsv.gz"
 
 - name: Get genecode annotations
   ansible.builtin.uri:
@@ -38,22 +38,22 @@
       col=gd_app_sym&col=gd_app_name&col=gd_prev_sym&col=gd_aliases&\
       col=gd_pub_ensembl_id&status=Approved&order_by=gd_app_sym_sort&\
       format=text&submit=submit"
-    dest:    "{{api_dir}}/hgcn_custom_results.txt"
-    creates: "{{api_dir}}/hgcn_custom_results.txt"
+    dest:    "{{api_dir}}/hgcn_custom_results.tsv"
+    creates: "{{api_dir}}/hgcn_custom_results.tsv"
 
 - name: Copy HUGO custom header
   ansible.builtin.copy:
-    src: "files/hgcn_header.txt"
-    dest: "{{api_dir}}/hgcn_genenames.txt"
+    src: "files/hgcn_header.tsv"
+    dest: "{{api_dir}}/hgcn_genenames.tsv"
     force: no
 
 - name: Append HUGO data under custom header
   ansible.builtin.shell:
     chdir: "{{api_dir}}"
-    cmd: tail -n +2 hgcn_custom_results.txt >> hgcn_genenames.txt
-    creates: "{{api_dir}}/hgcn_genenames.txt.gz"
+    cmd: tail -n +2 hgcn_custom_results.tsv >> hgcn_genenames.tsv
+    creates: "{{api_dir}}/hgcn_genenames.tsv.gz"
 
 - name: Gzip HUGO gene names
   community.general.archive:
-    path: "{{api_dir}}/hgcn_genenames.txt"
-    dest: "{{api_dir}}/hgcn_genenames.txt.gz"
+    path: "{{api_dir}}/hgcn_genenames.tsv"
+    dest: "{{api_dir}}/hgcn_genenames.tsv.gz"

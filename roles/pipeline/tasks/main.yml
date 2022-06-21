@@ -23,7 +23,7 @@
     - src: "/home/test_data/50_sample_input/crams"
       dest: "~/data_prep/workflows/coverage/data/crams"
 
-- name: Convenience data dir for Coverage workflow
+- name: Convenience data dir for Prepare VCF Teddy workflow
   ansible.builtin.file:
     path: "~/data_prep/workflows/prepare_vcf_teddy/data"
     state: directory
@@ -48,6 +48,11 @@
 
     - src: "/home/test_data/50_sample_input/bcfs"
       dest: "~/data_prep/workflows/prepare_vcf_teddy/data/bcfs"
+
+- name: Convenience data dir for Prepare VCF workflow
+  ansible.builtin.file:
+    path: "~/data_prep/workflows/prepare_vcf/data"
+    state: directory
 
 - name: Convenience symlinks for Prepare VCF workflow
   ansible.builtin.file:

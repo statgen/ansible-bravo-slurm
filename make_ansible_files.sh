@@ -55,7 +55,7 @@ LOGIN_IP=$(echo "${TERRAFORM_JSON}" | jq -r '.login_nat_ips[0]')
 cat << SSHDOC
 Host bravo-slurm-login
   User ${GCP_POSIX_UNAME}
-  Hostname ${LOGIN_IP}
+  HostName ${LOGIN_IP}
   Port 22
   ControlMaster auto
   ControlPath ${SLURM_SSH_CONTROL_PATH}

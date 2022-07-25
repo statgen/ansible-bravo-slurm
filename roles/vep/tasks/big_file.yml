@@ -1,0 +1,67 @@
+---
+- name: Create directory for kent tools.
+  ansible.builtin.file:
+    path: "{{kent_tools_dir}}"
+    state: directory
+    mode: 0755
+
+- name: Download Kent Tools source
+  ansible.builtin.unarchive:
+    remote_src: yes
+    src: "https://github.com/ucscGenomeBrowser/kent/archive/v335_base.tar.gz"
+    dest: "{{kent_tools_dir}}"
+    creates: "{{kent_src}}/makefile"
+
+- name: Write Kent Tools includes makefile
+  copy:
+    dest: "{{kent_src}}/inc/localEnvironment.mk"
+    content: "CFLAGS=\"-fPIC\""
+
+- name: Query sql include for Kent Tools build environment
+  ansible.builtin.command:
+    argv:
+      - "mariadb_config"
+      - "--include"
+  register: sql_includes
+
+- name: Query sql libs for Kent Tools build environment
+  ansible.builtin.command:
+    argv:
+      - "mariadb_config"
+      - "--libs"
+  register: sql_libs
+
+- name: Build Kent Tools jkOwnLib
+  environment:
+    KENT_SRC: "{{kent_src}}"
+    MACHTYPE: "{{ansible_facts.architecture}}"
+    CFLAGS: "-fPIC"
+    MYSQLINC: "{{ sql_includes | regex_replace('^-I`', '') }}"
+    MYSQLLIBS: "{{sql_libs}}"
+  community.general.make:
+    chdir: "{{kent_src}}/jkOwnLib"
+
+- name: Build Kent Tools lib
+  environment:
+    KENT_SRC: "{{kent_src}}"
+    MACHTYPE: "{{ansible_facts.architecture}}"
+    CFLAGS: "-fPIC"
+    MYSQLINC: "{{ sql_includes | regex_replace('^-I`', '') }}"
+    MYSQLLIBS: "{{sql_libs}}"
+  community.general.make:
+    chdir: "{{kent_src}}/lib"
+
+- name: Enumerate files in compiled output
+  ansible.builtin.find:
+    file_type: file
+    paths:
+      - "{{kent_src}}/lib/x86_64"
+  register: found
+
+- name: Create links for Bio::DB::BigFile expectations
+  ansible.builtin.file:
+    src: "{{item.path}}"
+    dest: "{{kent_src}}/lib/{{item.path | basename}}"
+    state: link
+  loop: "{{ found.files }}"
+

@@ -1,10 +1,14 @@
 ---
 perl5modules_basedir: "/apps/perl5modules"
+perl5lib_basedir: "{{perl5modules_basedir}}/lib/perl5"
 perl5lib_dirs:
-  - "{{perl5modules_basedir}}/lib/perl5/x86_64-linux-gnu-thread-multi"
-  - "{{perl5modules_basedir}}/lib/perl5"
+  - "{{perl5lib_basedir}}/x86_64-linux-gnu-thread-multi"
+  - "{{perl5lib_basedir}}"
   - "/apps/loftee"
 vep_dir: "/apps/ensemble_vep"
 vep_cache_dir: "/apps/vep_cache"
 htslib_dir: "/apps/htslib"
 htslib_ver: "1.15.1"
+
+kent_tools_dir: "/apps/kent_tools"
+kent_src: "{{kent_tools_dir}}/kent-335_base/src"

@@ -5,11 +5,15 @@
     state: directory
     mode: 0755
 
+- name: Build Bio::DB::BigFile Dependencies
+  include_tasks: big_file.yml
+
 - name: Install VEP Perl dependencies.
   community.general.cpanm:
-    pkg: "{{item}}" 
+    pkg: "{{item}}"
     locallib: "{{perl5modules_basedir}}"
   environment:
+    KENT_SRC: "{{kent_src}}"
     HTSLIB_DIR: "{{htslib_dir}}/htslib-{{htslib_ver}}"
     PERL5LIB: "{{perl5modules_basedir}}"
   loop:
@@ -20,16 +24,25 @@
     - Set::IntervalTree
     - JSON
     - Test::Warnings
+    - Bio::DB::BigFile
+    - DBD::SQLite
 
 - name: Force Install VEP Perl dependencies.
   environment:
     PERL5LIB: "{{perl5modules_basedir}}"
     PERL_MM_USE_DEFAULT: "1"
   ansible.builtin.command:
-    cmd: "perl -Mlocal::lib={{perl5modules_basedir}} -MCPAN -e 'force install {{item}}'"
+    cmd: "perl -Mlocal::lib={{perl5modules_basedir}} -MCPAN -e 'force install {{item.name}}'"
+    creates: "{{item.artifact}}"
   loop:
-    - PerlIO::gzip
-    - Try::Tiny
+    - {name: "List::MoreUtils",
+       artifact: "{{perl5lib_basedir}}/List/MoreUtils.pm"}
+    - {name: "PerlIO::gzip",
+       artifact: "{{perl5lib_basedir}}/x86_64-linux-gnu-thread-multi/PerlIO/gzip.pm"}
+    - {name: "Try::Tiny",
+       artifact: "{{perl5lib_basedir}}/Try/Tiny.pm"}
+    - {name: "Exporter::Tiny",
+       artifact: "{{perl5lib_basedir}}/Exporter/Tiny.pm"}
 
 - name: Clone VEP
   ansible.builtin.git:

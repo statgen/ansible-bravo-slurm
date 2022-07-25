@@ -14,5 +14,10 @@
       - libminizip1
       - minizip
       - unzip
+      - libpng-dev
+      - libssl-dev
+      - libmariadbclient-dev
+      - libmariadbclient-dev-compat
+
     state: present
     update_cache: yes

@@ -2,3 +2,5 @@
 loftee_dir: "/apps/loftee"
 loftee_data: "/apps/loftee_data"
 smoke_test_dir: "~/nf_smoke_test"
+dprep_dir: "~/data_prep"
+proc_vcf_dir: "{{dprep_dir}}/workflows/process_vcf"

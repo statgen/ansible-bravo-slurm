@@ -18,6 +18,6 @@
       - libssl-dev
       - libmariadbclient-dev
       - libmariadbclient-dev-compat
-
     state: present
     update_cache: yes
+    lock_timeout: 300

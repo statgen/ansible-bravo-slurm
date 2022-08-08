@@ -6,9 +6,9 @@
     repo: "https://github.com/statgen/bravo_data_prep.git"
     version: fr10-prep
 
-- name: Convenience data dir for Coverage workflow
+- name: Convenience data and crams dir for Coverage workflow
   ansible.builtin.file:
-    path: "{{dprep_dir}}/workflows/coverage/data"
+    path: "{{dprep_dir}}/workflows/coverage/data/crams"
     state: directory
 
 - name: Convenience symlinks Coverage workflow
@@ -19,9 +19,6 @@
   loop:
     - src: "/apps/reference"
       dest: "{{dprep_dir}}/workflows/coverage/data/ref"
-
-    - src: "/home/test_data/50_sample_input/crams"
-      dest: "{{dprep_dir}}/workflows/coverage/data/crams"
 
 - name: Convenience data dir for process vcf workflow
   ansible.builtin.file:

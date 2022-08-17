@@ -49,6 +49,7 @@
     - loftee
     - samtools
     - mlr
+    - mosdepth
     - bcftools
     - python3
     - data_prep_tooling

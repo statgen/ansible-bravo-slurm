@@ -1,0 +1,24 @@
+---
+- name: Create mosdepth directory
+  ansible.builtin.file:
+    path: "{{ version_dir }}"
+    state: directory
+    mode: 0775
+
+- name: Download mosdepth binary to version directory
+  ansible.builtin.copy:
+    remote_src: yes
+    src: "{{ download_url }}"
+    dest: "{{ version_dir }}"
+    creates: "{{ version_dir }}/mosdepth"
+
+- name: Create mosdepth module directory
+  ansible.builtin.file:
+    path: "/apps/modulefiles/mosdepth"
+    state: directory
+    mode: 0775
+
+- name: Create mosdepth LMOD module file
+  ansible.builtin.template:
+    dest: "/apps/modulefiles/mosdepth/{{mosdepth}}.lua"
+    src: "templates/lmod_module.lua.j2"

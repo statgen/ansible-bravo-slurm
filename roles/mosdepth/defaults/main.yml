@@ -1,0 +1,6 @@
+---
+mosdepth_version: "0.3.3"
+base_url: "https://github.com/brentp/mosdepth/releases/download"
+download_url: "{{base_url}}/v{{mosdepth_version}}/mosdepth" 
+base_dir: "/apps/mosdepth"
+version_dir: "{{base_dir}}/mosdepth-{{mosdepth}}"

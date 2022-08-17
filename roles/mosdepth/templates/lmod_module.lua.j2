@@ -1,0 +1,15 @@
+help([[
+  Mosdepth module
+]])
+
+local version = "{{mosdepth_version}}"
+local base    = "{{version_dir}}"
+local pkgName = myModuleName()
+
+prepend_path("PATH", base)
+
+whatis("Name: ".. pkgName)
+whatis("Version: " .. version)
+whatis("Category: data")
+whatis("https://github.com/brentp/mosdepth")
+whatis("Description: Fast BAM/CRAM depth calculation")

@@ -1,0 +1,6 @@
+---
+miller_version: "6.3.0"
+base_url: "https://github.com/johnkerl/miller/releases/download"
+download_url: "{{base_url}}/v{{miller_version}}/miller-{{miller__version}}-6.3.0-linux-amd64.tar.gz" 
+base_dir: "/apps/miller"
+version_dir: "{{base_dir}}/miller-{{miller_version}}-linux-amd64"

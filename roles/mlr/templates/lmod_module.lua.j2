@@ -1,0 +1,15 @@
+help([[
+  Miller module
+]])
+
+local version = "{{miller_version}}"
+local base    = "{{version_dir}}"
+local pkgName = myModuleName()
+
+prepend_path("PATH", base)
+
+whatis("Name: ".. pkgName)
+whatis("Version: " .. version)
+whatis("Category: data")
+whatis("URL: https://github.com/johnkerl/miller")
+whatis("Description: Data processing command line tool")

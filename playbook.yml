@@ -48,6 +48,7 @@
     - vep_cache
     - loftee
     - samtools
+    - mlr
     - bcftools
     - python3
     - data_prep_tooling

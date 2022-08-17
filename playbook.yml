@@ -35,7 +35,7 @@
         mode: 0775
 
 - hosts: login
-  gather_facts: no
+  gather_facts: yes
   tags: 
     - tooling
   vars:

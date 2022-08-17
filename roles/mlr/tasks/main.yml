@@ -12,13 +12,13 @@
     dest: "{{ base_dir }}"
     creates: "{{ version_dir }}"
 
-- name: Create samtools module directory
+- name: Create miller module directory
   ansible.builtin.file:
-    path: "/apps/modulefiles/samtools"
+    path: "/apps/modulefiles/miller"
     state: directory
     mode: 0775
 
 - name: Create miller LMOD module file
   ansible.builtin.template:
-    dest: "/apps/modulefiles/miller/{{samtools_version}}.lua"
+    dest: "/apps/modulefiles/miller/{{miller_version}}.lua"
     src: "templates/lmod_module.lua.j2"

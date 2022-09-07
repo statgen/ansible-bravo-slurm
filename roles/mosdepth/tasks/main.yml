@@ -6,11 +6,10 @@
     mode: 0775
 
 - name: Download mosdepth binary to version directory
-  ansible.builtin.copy:
-    remote_src: yes
-    src: "{{ download_url }}"
+  ansible.builtin.get_url:
+    url: "{{ download_url }}"
     dest: "{{ version_dir }}"
-    creates: "{{ version_dir }}/mosdepth"
+    mode: 0555
 
 - name: Create mosdepth module directory
   ansible.builtin.file:
@@ -20,5 +19,5 @@
 
 - name: Create mosdepth LMOD module file
   ansible.builtin.template:
-    dest: "/apps/modulefiles/mosdepth/{{mosdepth}}.lua"
+    dest: "/apps/modulefiles/mosdepth/{{mosdepth_version}}.lua"
     src: "templates/lmod_module.lua.j2"

@@ -17,8 +17,10 @@ SLURM_LOGIN_HOST="${WORKSPACE_NAME:=bravo-slurm-login}"
 # Slurm path to control socket.
 SLURM_SSH_CONTROL_PATH="${SLURM_SSH_CONTROL_PATH:=~/.ssh/sockets/slurm-login-node}"
 
-# Posix account name for GCP VMs
-GCP_POSIX_UNAME_GUESS=$(gcloud --format=json auth list | jq -r '.[0].account' | sed 's/[@.]/_/g')
+# Use active gcloud account's posix account name for GCP VMs
+GCP_POSIX_UNAME_GUESS=$(gcloud --format=json auth list |\
+                        jq -r '.[] | select(.status =="ACTIVE").account' |\
+                        sed 's/[@.]/_/g')
 GCP_POSIX_UNAME="${GCP_POSIX_UNAME:=${GCP_POSIX_UNAME_GUESS}}"
 
 ###################################

@@ -20,7 +20,7 @@
     - nextflow
 
 - hosts: login
-  gather_facts: no
+  gather_facts: yes
   vars:
     modulepath: "/apps/modulefiles"
   tags:

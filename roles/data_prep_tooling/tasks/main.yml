@@ -9,7 +9,7 @@
     depth: 1
     dest: "{{dprep_dir}}"
     repo: "https://github.com/statgen/bravo_data_prep.git"
-    version: fr10-prep
+    version: main
 
 - name: Install cget dependency retrieval tool
   ansible.builtin.pip:

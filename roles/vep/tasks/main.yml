@@ -65,7 +65,7 @@
     cmd: "perl INSTALL.pl --CACHEDIR {{vep_cache_dir}} --PLUGINS all --AUTO ap -q -n"
   register: vep_install
   environment:
-    PERL5LIB: "{{perl5lib}}"
+    PERL5LIB: "{{perl5lib_dirs | join(':')}}"
   when: vep_install_lock.stat.exists == false
 
 - name: Create VEP install lockfile

@@ -9,7 +9,7 @@
   ansible.builtin.get_url:
     url: "{{ download_url }}"
     dest: "{{ version_dir }}"
-    mode: 0555
+    mode: 0775
 
 - name: Create mosdepth module directory
   ansible.builtin.file:

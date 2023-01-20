@@ -11,6 +11,7 @@ If a requirements file is present, install ansible galaxy collections:
 ```sh
 ansible-galaxy install -r requirements.yml
 ```
+
 ## Run
 Once cluster has been provisioned:
 1. create an ssh config for connecting to the login node.
@@ -33,6 +34,12 @@ Host example-slurm-login
   ControlMaster auto
   ControlPath ${SLURM_SSH_CONTROL_PATH}
   KbdInteractiveAuthentication=no
+```
+
+## SSH into Login Node
+To ssh into the login node, use the `ssh_config` file created above and host alias defined in that file.
+```sh
+ssh -F ssh_config bravo-slurm-login
 ```
 
 ## Notes

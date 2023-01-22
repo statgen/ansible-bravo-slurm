@@ -33,6 +33,12 @@
         path: "{{modulepath}}"
         state: directory
         mode: 0775
+    - name: Configure LMOD to use module directory
+      become: yes
+      ansible.builtin.copy:
+        dest: "/etc/profile.d/lmod_modulepath.sh"
+        content: "export MODULEPATH=/apps/modulefiles"
+        mode: 0755
 
 - hosts: login
   gather_facts: yes

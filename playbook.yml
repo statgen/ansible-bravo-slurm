@@ -10,6 +10,15 @@
         group: "{{ ansible_user_id }}"
         path: "/apps"
         state: directory
+    - name: Get updated google gpg key for apt
+      become: yes
+      ansible.builtin.get_url:
+        url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+        dest: /tmp/google-apt-key.gpg
+    - name: Install updated gpg key
+      become: yes
+      ansible.builtin.command:
+        cmd: "apt-key add /tmp/google-apt-key.gpg"
 
 - hosts: login
   become: yes

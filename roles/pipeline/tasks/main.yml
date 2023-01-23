@@ -4,7 +4,7 @@
     depth: 1
     dest: "{{dprep_dir}}"
     repo: "https://github.com/statgen/bravo_data_prep.git"
-    version: fr10-prep
+    version: main
 
 - name: Convenience data and crams dir for Coverage workflow
   ansible.builtin.file:

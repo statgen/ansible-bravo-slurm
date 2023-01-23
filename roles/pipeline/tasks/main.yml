@@ -31,9 +31,6 @@
     dest: "{{item.dest}}"
     state: link
   loop:
-    - src: "/apps/data_prep/tools/py_tools/add_cadd_scores.py"
-      dest: "{{proc_vcf_dir}}/add_cadd_scores.py"
-
     - src: "/mnt/vcfs/freeze10/subsets/topmed/sites"
       dest: "{{proc_vcf_dir}}/data/bcfs/sites" 
 
